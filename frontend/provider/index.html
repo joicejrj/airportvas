@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f1e">
+<title>Provider — Airport Parking Services</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+  :root {
+    --bg0: #0a0f1e; --bg1: #141b2d; --bg2: #1e2940;
+    --accent: #6ee7b7; --accent2: #34d399;
+    --pending: #f59e0b; --assigned: #38bdf8; --accepted: #818cf8;
+    --inprog: #fb923c; --done: #6ee7b7; --cancelled: #ef4444;
+    --text1: #e2e8f0; --text2: #94a3b8; --text3: #475569;
+    --border: rgba(148,163,184,.12);
+    --radius: 14px;
+    --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg0); color: var(--text1); font-family: var(--font); min-height: 100dvh; }
+
+  .nav { background: var(--bg1); border-bottom: 1px solid var(--border);
+         display: flex; align-items: center; justify-content: space-between;
+         padding: 0 16px; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-size: 17px; font-weight: 700; }
+  .nav-logo span { color: var(--accent); }
+  .status-pill {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    background: rgba(110,231,183,.15); color: var(--accent); cursor: pointer;
+  }
+  .status-pill.busy { background: rgba(251,146,60,.15); color: var(--inprog); }
+
+  .tabs { display: flex; background: var(--bg1); border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: 500;
+         color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent;
+         transition: all .2s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .view { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* JOB CARD */
+  .job-card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+    transition: transform .15s;
+  }
+  .job-card:active { transform: scale(.98); }
+  .job-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .job-plate { font-size: 22px; font-weight: 800; letter-spacing: 1.5px; }
+  .job-svc-name { font-size: 15px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+  .job-location { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text2);
+                  margin-top: 8px; }
+  .status-chip {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .sc-assigned   { background: rgba(56,189,248,.2);  color: var(--assigned); }
+  .sc-accepted   { background: rgba(129,140,248,.2); color: var(--accepted); }
+  .sc-in_progress{ background: rgba(251,146,60,.2);  color: var(--inprog); }
+  .sc-completed  { background: rgba(110,231,183,.2); color: var(--done); }
+  .sc-pending    { background: rgba(245,158,11,.2);  color: var(--pending); }
+
+  .job-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-accept {
+    flex: 2; background: var(--accent); color: #0a0f1e;
+    border: none; border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 700;
+    font-family: var(--font); cursor: pointer; transition: opacity .2s;
+  }
+  .btn-accept:hover { opacity: .85; }
+  .btn-reject {
+    flex: 1; background: rgba(239,68,68,.12); color: var(--cancelled);
+    border: 1px solid rgba(239,68,68,.3); border-radius: 10px; padding: 12px;
+    font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer;
+  }
+  .btn-start {
+    flex: 1; background: rgba(251,146,60,.15); color: var(--inprog);
+    border: 1px solid rgba(251,146,60,.3); border-radius: 10px; padding: 12px;
+    font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer;
+  }
+  .btn-complete {
+    flex: 2; background: rgba(110,231,183,.15); color: var(--done);
+    border: 1px solid rgba(110,231,183,.3); border-radius: 10px; padding: 12px;
+    font-size: 15px; font-weight: 700; font-family: var(--font); cursor: pointer;
+  }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-icon  { font-size: 48px; margin-bottom: 12px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-card { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+  .stat-value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+
+  /* TIMER */
+  .job-timer { background: rgba(251,146,60,.1); border: 1px solid rgba(251,146,60,.3);
+               border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--inprog);
+               display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+
+  .offline-banner { background: rgba(245,158,11,.15); border-bottom: 1px solid var(--pending);
+                    color: var(--pending); padding: 8px 16px; text-align: center;
+                    font-size: 13px; display: none; }
+  .offline-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="offline-banner" id="offlineBanner">⚡ Offline — actions queued for sync</div>
+
+<nav class="nav">
+  <div class="nav-logo">Sky<span>Pro</span></div>
+  <div class="status-pill" id="providerStatus" onclick="toggleAvailability()">
+    ● Available
+  </div>
+</nav>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('active')">Active Jobs</div>
+  <div class="tab" onclick="switchTab('history')">History</div>
+  <div class="tab" onclick="switchTab('stats')">My Stats</div>
+</div>
+
+<!-- ACTIVE JOBS -->
+<div class="view active" id="view-active">
+  <div id="activeJobs"></div>
+</div>
+
+<!-- HISTORY -->
+<div class="view" id="view-history">
+  <div id="historyJobs"></div>
+</div>
+
+<!-- STATS -->
+<div class="view" id="view-stats">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Today</div>
+      <div class="stat-value" id="statToday" style="color:var(--accent);">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total</div>
+      <div class="stat-value" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Now</div>
+      <div class="stat-value" id="statActive" style="color:var(--inprog);">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Time</div>
+      <div class="stat-value" id="statAvg">—</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initSync, queueStatusChange, syncQueue } from '/pwa/sync-engine.js';
+import { dbGetAll, dbPut, dbGetByIndex } from '/pwa/indexeddb/db.js';
+
+let jobs    = [];
+let timers  = {};
+
+async function boot() {
+  await initSync();
+  await loadJobs();
+  setupNetwork();
+  setupSync();
+  // Poll for new jobs every 15s
+  setInterval(loadJobs, 15_000);
+}
+
+async function loadJobs() {
+  try {
+    if (navigator.onLine) {
+      const r = await fetch('/api/provider/jobs', {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      if (r.ok) {
+        const d = await r.json();
+        jobs    = d.data ?? [];
+        // Cache in IndexedDB
+        for (const j of jobs) await dbPut('job_cache', j);
+      }
+    } else {
+      jobs = await dbGetAll('job_cache');
+    }
+  } catch {
+    jobs = await dbGetAll('job_cache');
+  }
+  renderJobs();
+  loadStats();
+}
+
+function renderJobs() {
+  const activeStatuses   = ['assigned', 'accepted', 'in_progress'];
+  const activeJobs       = jobs.filter(j => activeStatuses.includes(j.status));
+  const container        = document.getElementById('activeJobs');
+
+  if (!activeJobs.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🟢</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text2);">No active jobs</div>
+        <div style="font-size:14px;margin-top:6px;">You're up to date!</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = activeJobs.map(j => jobCard(j)).join('');
+
+  // Start timers for in-progress jobs
+  activeJobs.filter(j => j.status === 'in_progress').forEach(j => startTimer(j));
+}
+
+function jobCard(j) {
+  const actions = (() => {
+    switch (j.status) {
+      case 'assigned':
+        return `<div class="job-actions">
+          <button class="btn-accept"  onclick="acceptJob('${j.id}', ${j.version})">✓ Accept</button>
+          <button class="btn-reject"  onclick="rejectJob('${j.id}', ${j.version})">Reject</button>
+        </div>`;
+      case 'accepted':
+        return `<div class="job-actions">
+          <button class="btn-start"    onclick="startJob('${j.id}', ${j.version})">▶ Start</button>
+        </div>`;
+      case 'in_progress':
+        return `
+          <div class="job-timer" id="timer-${j.id}">⏱ 00:00</div>
+          <div class="job-actions">
+            <button class="btn-complete" onclick="completeJob('${j.id}', ${j.version})">✓ Complete</button>
+          </div>`;
+      default:
+        return '';
+    }
+  })();
+
+  return `
+    <div class="job-card" id="job-${j.id}">
+      <div class="job-header">
+        <div>
+          <div class="job-plate">${j.vehicle_plate ?? j.order?.vehicle_plate ?? '—'}</div>
+          <div class="job-svc-name">${j.service_name ?? '—'}</div>
+        </div>
+        <span class="status-chip sc-${j.status}">${j.status.replace('_', ' ')}</span>
+      </div>
+      <div class="job-location">
+        📍 ${j.location_details ?? 'Location not specified'}
+      </div>
+      ${actions}
+    </div>`;
+}
+
+function startTimer(job) {
+  if (timers[job.id]) return;
+  const startedAt = job.started_at ? new Date(job.started_at) : new Date();
+  timers[job.id] = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    const el = document.getElementById(`timer-${job.id}`);
+    if (el) el.innerHTML = `⏱ ${m}:${s}`;
+    else clearInterval(timers[job.id]);
+  }, 1000);
+}
+
+async function changeStatus(svcId, status, version) {
+  await queueStatusChange(svcId, status, version);
+  // Optimistically update local cache
+  const job = jobs.find(j => j.id === svcId);
+  if (job) {
+    job.status  = status;
+    job.version = (version || 1) + 1;
+    await dbPut('job_cache', job);
+  }
+  renderJobs();
+}
+
+window.acceptJob   = (id, v) => changeStatus(id, 'accepted', v);
+window.rejectJob   = (id, v) => changeStatus(id, 'rejected', v);
+window.startJob    = (id, v) => changeStatus(id, 'in_progress', v);
+window.completeJob = (id, v) => {
+  clearInterval(timers[id]);
+  delete timers[id];
+  changeStatus(id, 'completed', v);
+};
+
+function loadStats() {
+  const completed = jobs.filter(j => j.status === 'completed');
+  const active    = jobs.filter(j => ['assigned','accepted','in_progress'].includes(j.status));
+  const today     = completed.filter(j => j.completed_at?.startsWith(new Date().toISOString().slice(0, 10)));
+  document.getElementById('statToday').textContent  = today.length;
+  document.getElementById('statTotal').textContent  = completed.length;
+  document.getElementById('statActive').textContent = active.length;
+}
+
+window.toggleAvailability = () => {
+  const pill = document.getElementById('providerStatus');
+  const isBusy = pill.classList.toggle('busy');
+  pill.textContent = isBusy ? '● Busy' : '● Available';
+};
+
+window.switchTab = (tab) => {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['active', 'history', 'stats'];
+    t.classList.toggle('active', names[i] === tab);
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${tab}`)?.classList.add('active');
+
+  if (tab === 'history') {
+    const container = document.getElementById('historyJobs');
+    const done = jobs.filter(j => ['completed', 'cancelled'].includes(j.status));
+    container.innerHTML = done.length
+      ? done.map(j => `
+          <div class="job-card" style="opacity:.7;">
+            <div class="job-header">
+              <div>
+                <div class="job-plate">${j.vehicle_plate ?? '—'}</div>
+                <div class="job-svc-name">${j.service_name ?? '—'}</div>
+              </div>
+              <span class="status-chip sc-${j.status}">${j.status}</span>
+            </div>
+            <div class="job-location" style="margin-top:8px;">
+              Completed: ${j.completed_at ? new Date(j.completed_at).toLocaleString() : '—'}
+            </div>
+          </div>`).join('')
+      : '<div class="empty-state"><div class="empty-icon">📋</div><div>No history yet</div></div>';
+  }
+};
+
+function setupNetwork() {
+  const update = () => {
+    document.getElementById('offlineBanner').classList.toggle('show', !navigator.onLine);
+  };
+  window.addEventListener('online', () => { update(); loadJobs(); });
+  window.addEventListener('offline', update);
+  update();
+}
+
+function setupSync() {
+  window.addEventListener('sync:complete', loadJobs);
+}
+
+function getToken() {
+  return localStorage.getItem('ap_token') ?? '';
+}
+
+boot();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/pwa/service-worker/service-worker.js');
+}
+</script>
+</body>
+</html>

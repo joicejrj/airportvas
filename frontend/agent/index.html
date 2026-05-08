@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Agent — Airport Parking Services</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+  :root {
+    --bg0: #0f172a;
+    --bg1: #1e293b;
+    --bg2: #334155;
+    --accent: #38bdf8;
+    --accent2: #0ea5e9;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text1: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --border: rgba(148,163,184,0.15);
+    --radius: 12px;
+    --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg0); color: var(--text1); font-family: var(--font); min-height: 100dvh; }
+
+  /* NAV */
+  .nav { background: var(--bg1); border-bottom: 1px solid var(--border); padding: 0 16px;
+         display: flex; align-items: center; justify-content: space-between; height: 56px;
+         position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .nav-logo span { color: var(--accent); }
+  .sync-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2);
+                background: var(--bg2); padding: 4px 10px; border-radius: 20px; cursor: pointer; }
+  .sync-badge.pending { color: var(--warning); }
+  .sync-badge.syncing { color: var(--accent); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+  .dot.offline { background: var(--danger); }
+  .dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* TABS */
+  .tabs { display: flex; background: var(--bg1); border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; text-align: center; padding: 12px 4px; font-size: 13px; font-weight: 500;
+         color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent;
+         transition: all .2s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* MAIN CONTENT */
+  .view { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius);
+          padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase;
+                letter-spacing: .5px; margin-bottom: 14px; }
+
+  /* FORM ELEMENTS */
+  label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 5px; }
+  input, select, textarea {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text1); padding: 11px 14px; border-radius: 9px; font-size: 15px;
+    font-family: var(--font); outline: none; transition: border-color .2s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  .form-row { margin-bottom: 12px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* SERVICE SELECTOR */
+  .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .service-item {
+    background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 12px; cursor: pointer; transition: all .2s; position: relative;
+  }
+  .service-item.selected { border-color: var(--accent); background: rgba(56,189,248,.1); }
+  .service-item .svc-name { font-size: 14px; font-weight: 600; }
+  .service-item .svc-price { font-size: 13px; color: var(--accent); margin-top: 3px; }
+  .service-item .svc-check {
+    position: absolute; top: 8px; right: 8px; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--accent); display: none;
+    align-items: center; justify-content: center;
+  }
+  .service-item.selected .svc-check { display: flex; }
+  .svc-check::after { content: '✓'; font-size: 11px; color: #fff; font-weight: 700; }
+
+  /* PAYMENT METHOD */
+  .pay-methods { display: flex; gap: 8px; }
+  .pay-method {
+    flex: 1; background: var(--bg2); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer;
+    transition: all .2s;
+  }
+  .pay-method.selected { border-color: var(--success); background: rgba(34,197,94,.1); }
+  .pay-method .pm-icon { font-size: 22px; }
+  .pay-method .pm-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    background: var(--bg2); border-radius: 10px; padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center; margin: 8px 0 16px;
+  }
+  .summary-bar .total { font-size: 22px; font-weight: 700; }
+  .summary-bar .count { font-size: 13px; color: var(--text2); }
+
+  /* BUTTONS */
+  .btn {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    font-size: 16px; font-weight: 600; font-family: var(--font);
+    cursor: pointer; transition: all .2s; margin-top: 8px;
+  }
+  .btn-primary { background: var(--accent); color: #0f172a; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-secondary { background: var(--bg2); color: var(--text1); border: 1px solid var(--border); }
+  .btn-danger { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid var(--danger); }
+
+  /* ORDER LIST */
+  .order-item {
+    background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; margin-bottom: 10px; cursor: pointer;
+  }
+  .order-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .order-plate { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  .order-meta { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .badge {
+    padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  }
+  .badge-unpaid  { background: rgba(239,68,68,.2);  color: var(--danger); }
+  .badge-partial { background: rgba(245,158,11,.2); color: var(--warning); }
+  .badge-paid    { background: rgba(34,197,94,.2);  color: var(--success); }
+  .order-services { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .svc-tag { background: var(--bg2); color: var(--text2); padding: 3px 8px; border-radius: 6px; font-size: 11px; }
+
+  /* OFFLINE BANNER */
+  .offline-banner {
+    background: rgba(245,158,11,.15); border: 1px solid var(--warning);
+    color: var(--warning); padding: 10px 16px; text-align: center; font-size: 13px;
+    display: none;
+  }
+  .offline-banner.show { display: block; }
+
+  /* QUEUE STATUS */
+  .queue-panel { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .queue-item { display: flex; align-items: center; gap: 10px; padding: 8px 0;
+                border-bottom: 1px solid var(--border); font-size: 13px; }
+  .queue-item:last-child { border-bottom: none; }
+  .qi-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .qi-status.pending  { background: var(--warning); }
+  .qi-status.success  { background: var(--success); }
+  .qi-status.failed   { background: var(--danger); }
+  .qi-status.conflict { background: #a855f7; }
+  .qi-info { flex: 1; }
+  .qi-type { font-weight: 500; }
+  .qi-time { color: var(--text3); font-size: 11px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    display: none; align-items: flex-end; z-index: 200;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg1); border-radius: 20px 20px 0 0; padding: 24px 16px;
+    width: 100%; max-height: 85dvh; overflow-y: auto;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .modal-close { float: right; background: var(--bg2); border: none; color: var(--text2);
+                 width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+
+  /* STEP INDICATOR */
+  .steps { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .step { flex: 1; height: 3px; background: var(--bg2); border-radius: 2px; transition: background .3s; }
+  .step.active { background: var(--accent); }
+  .step.done   { background: var(--success); }
+</style>
+</head>
+<body>
+
+<!-- OFFLINE BANNER -->
+<div class="offline-banner" id="offlineBanner">
+  ⚡ Offline mode — actions will sync when connection restores
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">Sky<span>Valet</span></div>
+  <div class="sync-badge" id="syncBadge" onclick="showQueuePanel()">
+    <div class="dot" id="connDot"></div>
+    <span id="syncLabel">Connected</span>
+  </div>
+</nav>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('new-order')">New Order</div>
+  <div class="tab" onclick="switchTab('orders')">Orders</div>
+  <div class="tab" onclick="switchTab('reports')">Reports</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     VIEW: NEW ORDER (3-step wizard)
+═════════════════════════════════════════════════════ -->
+<div class="view active" id="view-new-order">
+
+  <!-- Step indicator -->
+  <div class="steps" style="margin-top:16px;">
+    <div class="step active" id="step-1"></div>
+    <div class="step" id="step-2"></div>
+    <div class="step" id="step-3"></div>
+  </div>
+
+  <!-- STEP 1: Vehicle + Services -->
+  <div id="wizard-step-1">
+    <div class="card">
+      <div class="card-title">Vehicle Details</div>
+      <div class="form-row">
+        <label>Number Plate *</label>
+        <input type="text" id="plate" placeholder="AB12 CDE" style="font-size:20px;font-weight:700;text-transform:uppercase;" maxlength="10">
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Make</label>
+          <input type="text" id="make" placeholder="Toyota">
+        </div>
+        <div class="form-row">
+          <label>Model</label>
+          <input type="text" id="model" placeholder="Camry">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Customer Phone</label>
+        <input type="tel" id="phone" placeholder="+44 7700 000000">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Select Services</div>
+      <div class="service-grid" id="serviceGrid">
+        <!-- Populated from catalogue -->
+      </div>
+    </div>
+
+    <div class="summary-bar" id="summaryBar" style="display:none;">
+      <div>
+        <div class="total" id="totalAmount">£0.00</div>
+        <div class="count" id="svcCount">0 services selected</div>
+      </div>
+      <button class="btn btn-primary" style="width:auto;padding:12px 24px;" onclick="goToStep(2)">
+        Next →
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Location -->
+  <div id="wizard-step-2" style="display:none;">
+    <div class="card">
+      <div class="card-title">Parking Location</div>
+      <div class="form-row">
+        <label>Location / Bay</label>
+        <select id="locationSelect">
+          <option value="">Select parking location…</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Bay / Space Details</label>
+        <input type="text" id="locationDetail" placeholder="e.g. Level 2, Bay B-14">
+      </div>
+      <div class="form-row">
+        <label>Notes (optional)</label>
+        <textarea id="notes" placeholder="Any special instructions…" rows="2"
+                  style="resize:none;"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary" style="margin-top:0;" onclick="goToStep(1)">← Back</button>
+      <button class="btn btn-primary" style="margin-top:0;" onclick="goToStep(3)">Next →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Payment -->
+  <div id="wizard-step-3" style="display:none;">
+    <div class="card">
+      <div class="card-title">Payment</div>
+      <div class="pay-methods">
+        <div class="pay-method selected" id="pm-cash" onclick="selectPayment('cash')">
+          <div class="pm-icon">💵</div>
+          <div class="pm-label">Cash</div>
+        </div>
+        <div class="pay-method" id="pm-card" onclick="selectPayment('card')">
+          <div class="pm-icon">💳</div>
+          <div class="pm-label">Card</div>
+        </div>
+        <div class="pay-method" id="pm-online" onclick="selectPayment('online')">
+          <div class="pm-icon">📱</div>
+          <div class="pm-label">Online</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <label>Amount Received</label>
+        <input type="number" id="amountReceived" step="0.01" placeholder="0.00" style="font-size:22px;">
+      </div>
+      <div id="changeRow" style="display:none;margin-top:8px;">
+        <div style="background:rgba(34,197,94,.1);border:1px solid var(--success);border-radius:8px;padding:10px 14px;">
+          Change: <strong id="changeAmount" style="color:var(--success);font-size:18px;">£0.00</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="color:var(--text2);font-size:14px;">Order Total</span>
+        <span style="font-size:18px;font-weight:700;" id="reviewTotal">£0.00</span>
+      </div>
+      <div id="reviewServices"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary" style="margin-top:0;" onclick="goToStep(2)">← Back</button>
+      <button class="btn btn-primary" style="margin-top:0;flex:2;" id="submitBtn"
+              onclick="submitOrder()">Create Order & Assign</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     VIEW: ORDERS LIST
+═════════════════════════════════════════════════════ -->
+<div class="view" id="view-orders">
+  <div style="display:flex;gap:8px;margin-bottom:12px;margin-top:4px;">
+    <input type="text" id="orderSearch" placeholder="Search plate or customer…" oninput="filterOrders()">
+    <select id="statusFilter" style="width:130px;" onchange="filterOrders()">
+      <option value="">All</option>
+      <option value="unpaid">Unpaid</option>
+      <option value="partial">Partial</option>
+      <option value="paid">Paid</option>
+    </select>
+  </div>
+  <div id="ordersList"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     VIEW: REPORTS
+═════════════════════════════════════════════════════ -->
+<div class="view" id="view-reports">
+  <div class="card">
+    <div class="card-title">Today's Summary</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="reportGrid">
+      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
+        <div style="font-size:12px;color:var(--text2);">Orders</div>
+        <div style="font-size:28px;font-weight:700;margin-top:4px;" id="rOrders">—</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
+        <div style="font-size:12px;color:var(--text2);">Revenue</div>
+        <div style="font-size:28px;font-weight:700;margin-top:4px;color:var(--success);" id="rRevenue">—</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
+        <div style="font-size:12px;color:var(--text2);">Cash</div>
+        <div style="font-size:22px;font-weight:600;margin-top:4px;" id="rCash">—</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
+        <div style="font-size:12px;color:var(--text2);">Card / Online</div>
+        <div style="font-size:22px;font-weight:600;margin-top:4px;" id="rCard">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="serviceBreakdown"></div>
+</div>
+
+<!-- QUEUE PANEL MODAL -->
+<div class="modal-overlay" id="queueModal" onclick="hideQueuePanel()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="hideQueuePanel()">×</button>
+    <div class="modal-title">Sync Queue</div>
+    <div id="queueList"><div style="color:var(--text3);text-align:center;padding:20px;">Empty</div></div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:52px;margin-bottom:12px;">✅</div>
+    <div style="font-size:22px;font-weight:700;margin-bottom:8px;">Order Created!</div>
+    <div style="color:var(--text2);margin-bottom:20px;" id="successDetail">Syncing with server…</div>
+    <button class="btn btn-primary" onclick="newOrder()">New Order</button>
+  </div>
+</div>
+
+<script type="module">
+import { initSync, queueOrderCreate, queuePayment, syncQueue, uuidv4 }
+  from '/pwa/sync-engine.js';
+import { getCatalogue, dbGetAll, dbPut } from '/pwa/indexeddb/db.js';
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let state = {
+  services: [],
+  locations: [],
+  selectedServices: [],
+  paymentMethod: 'cash',
+  currentStep: 1,
+  orders: [],
+};
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+async function boot() {
+  await initSync();
+  await loadCatalogue();
+  await loadOrders();
+  loadReport();
+  setupNetworkListener();
+  setupSyncListener();
+}
+
+async function loadCatalogue() {
+  let services = await getCatalogue();
+
+  if (services.length === 0 && navigator.onLine) {
+    try {
+      const r = await fetch('/api/services');
+      const d = await r.json();
+      services = d.data ?? [];
+    } catch {}
+  }
+
+  state.services = services;
+  renderServiceGrid();
+
+  // Load locations
+  try {
+    const r = await fetch('/api/locations');
+    const d = await r.json();
+    state.locations = d.data ?? [];
+    renderLocations();
+  } catch {}
+}
+
+function renderServiceGrid() {
+  const grid = document.getElementById('serviceGrid');
+  grid.innerHTML = state.services.map(s => `
+    <div class="service-item" id="svc-${s.id}" onclick="toggleService('${s.id}')">
+      <div class="svc-check"></div>
+      <div class="svc-name">${s.name}</div>
+      <div class="svc-price">£${parseFloat(s.price || s.base_price || 0).toFixed(2)}</div>
+    </div>
+  `).join('');
+}
+
+function renderLocations() {
+  const sel = document.getElementById('locationSelect');
+  state.locations.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = `${l.name} (${l.zone})`;
+    sel.appendChild(opt);
+  });
+}
+
+// ── SERVICE SELECTION ─────────────────────────────────────────────────────
+window.toggleService = (id) => {
+  const idx = state.selectedServices.findIndex(s => s.service_id === id);
+  if (idx > -1) {
+    state.selectedServices.splice(idx, 1);
+    document.getElementById(`svc-${id}`)?.classList.remove('selected');
+  } else {
+    const svc = state.services.find(s => s.id === id);
+    if (!svc) return;
+    state.selectedServices.push({ service_id: id, price: parseFloat(svc.price || svc.base_price || 0) });
+    document.getElementById(`svc-${id}`)?.classList.add('selected');
+  }
+  updateSummary();
+};
+
+function updateSummary() {
+  const total = state.selectedServices.reduce((s, i) => s + i.price, 0);
+  const bar   = document.getElementById('summaryBar');
+  bar.style.display = state.selectedServices.length > 0 ? 'flex' : 'none';
+  document.getElementById('totalAmount').textContent = `£${total.toFixed(2)}`;
+  document.getElementById('svcCount').textContent =
+    `${state.selectedServices.length} service${state.selectedServices.length !== 1 ? 's' : ''} selected`;
+  // Keep review total updated
+  document.getElementById('reviewTotal').textContent = `£${total.toFixed(2)}`;
+  document.getElementById('amountReceived').value = total.toFixed(2);
+  renderReviewServices();
+}
+
+function renderReviewServices() {
+  const container = document.getElementById('reviewServices');
+  container.innerHTML = state.selectedServices.map(s => {
+    const svc = state.services.find(sv => sv.id === s.service_id);
+    return `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);padding:4px 0;">
+      <span>${svc?.name ?? s.service_id}</span>
+      <span>£${s.price.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── WIZARD STEPS ──────────────────────────────────────────────────────────
+window.goToStep = (n) => {
+  if (n === 2 && state.selectedServices.length === 0) {
+    alert('Please select at least one service.');
+    return;
+  }
+  if (n === 2 && !document.getElementById('plate').value.trim()) {
+    alert('Please enter the vehicle number plate.');
+    return;
+  }
+  state.currentStep = n;
+  [1, 2, 3].forEach(i => {
+    document.getElementById(`wizard-step-${i}`).style.display = i === n ? 'block' : 'none';
+    const stepEl = document.getElementById(`step-${i}`);
+    stepEl.className = 'step ' + (i < n ? 'done' : i === n ? 'active' : '');
+  });
+};
+
+// ── PAYMENT ───────────────────────────────────────────────────────────────
+window.selectPayment = (method) => {
+  state.paymentMethod = method;
+  ['cash', 'card', 'online'].forEach(m => {
+    document.getElementById(`pm-${m}`)?.classList.toggle('selected', m === method);
+  });
+};
+
+document.getElementById('amountReceived').addEventListener('input', function () {
+  const total    = state.selectedServices.reduce((s, i) => s + i.price, 0);
+  const received = parseFloat(this.value) || 0;
+  const change   = received - total;
+  const changeRow = document.getElementById('changeRow');
+  if (received > 0 && state.paymentMethod === 'cash') {
+    changeRow.style.display = 'block';
+    document.getElementById('changeAmount').textContent =
+      `£${Math.max(0, change).toFixed(2)}`;
+  } else {
+    changeRow.style.display = 'none';
+  }
+});
+
+// ── ORDER SUBMIT ──────────────────────────────────────────────────────────
+window.submitOrder = async () => {
+  const plate    = document.getElementById('plate').value.trim().toUpperCase();
+  const received = parseFloat(document.getElementById('amountReceived').value) || 0;
+  const total    = state.selectedServices.reduce((s, i) => s + i.price, 0);
+
+  if (!plate) { alert('Enter vehicle plate'); return; }
+  if (received < total && state.paymentMethod !== 'online') {
+    if (!confirm(`Amount received (£${received}) is less than total (£${total}). Record as partial payment?`)) {
+      return;
+    }
+  }
+
+  document.getElementById('submitBtn').disabled = true;
+
+  const orderId = uuidv4();
+  const services = state.selectedServices.map(s => ({
+    ...s,
+    id:              uuidv4(),
+    location_details: document.getElementById('locationDetail').value,
+    location_id:      document.getElementById('locationSelect').value || null,
+  }));
+
+  // Queue order creation
+  await queueOrderCreate({
+    id:             orderId,
+    vehicle_plate:  plate,
+    vehicle_make:   document.getElementById('make').value,
+    vehicle_model:  document.getElementById('model').value,
+    customer_phone: document.getElementById('phone').value,
+    notes:          document.getElementById('notes').value,
+    services,
+    source:         'agent',
+  });
+
+  // Queue payment if amount > 0
+  if (received > 0) {
+    await queuePayment(orderId, {
+      payment_method: state.paymentMethod,
+      amount:         Math.min(received, total),
+    });
+  }
+
+  // Cache order locally for immediate display
+  await dbPut('order_cache', {
+    id:             orderId,
+    vehicle_plate:  plate,
+    payment_status: received >= total ? 'paid' : received > 0 ? 'partial' : 'unpaid',
+    total_amount:   total,
+    paid_amount:    Math.min(received, total),
+    service_count:  services.length,
+    created_at:     new Date().toISOString(),
+    _local:         true,
+  });
+
+  // Show success
+  document.getElementById('successDetail').textContent =
+    `${services.length} service${services.length > 1 ? 's' : ''} queued for assignment`;
+  document.getElementById('successModal').classList.add('show');
+  document.getElementById('submitBtn').disabled = false;
+};
+
+window.newOrder = () => {
+  document.getElementById('successModal').classList.remove('show');
+  // Reset form
+  document.getElementById('plate').value  = '';
+  document.getElementById('make').value   = '';
+  document.getElementById('model').value  = '';
+  document.getElementById('phone').value  = '';
+  document.getElementById('notes').value  = '';
+  document.getElementById('locationDetail').value = '';
+  state.selectedServices = [];
+  document.querySelectorAll('.service-item').forEach(el => el.classList.remove('selected'));
+  updateSummary();
+  goToStep(1);
+  loadOrders();
+};
+
+// ── ORDERS LIST ───────────────────────────────────────────────────────────
+async function loadOrders() {
+  let orders = [];
+  try {
+    if (navigator.onLine) {
+      const r = await fetch('/api/orders');
+      const d = await r.json();
+      orders = d.data ?? [];
+    } else {
+      orders = await dbGetAll('order_cache');
+    }
+  } catch {
+    orders = await dbGetAll('order_cache');
+  }
+  state.orders = orders;
+  renderOrders(orders);
+}
+
+function renderOrders(orders) {
+  const container = document.getElementById('ordersList');
+  if (!orders.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:40px 0;">No orders</div>';
+    return;
+  }
+  container.innerHTML = orders.map(o => `
+    <div class="order-item">
+      <div class="order-header">
+        <div>
+          <div class="order-plate">${o.vehicle_plate}</div>
+          <div class="order-meta">${o.agent_name ?? 'You'} · ${timeAgo(o.created_at)}</div>
+        </div>
+        <span class="badge badge-${o.payment_status}">
+          ${o.payment_status === 'unpaid' ? 'Unpaid' : o.payment_status === 'partial' ? 'Partial' : 'Paid'}
+        </span>
+      </div>
+      <div style="margin-top:8px;font-size:13px;color:var(--text2);">
+        £${parseFloat(o.paid_amount||0).toFixed(2)} / £${parseFloat(o.total_amount).toFixed(2)}
+        <span style="color:var(--text3);">· ${o.service_count ?? o.services?.length ?? 0} services</span>
+        ${o._local ? '<span style="color:var(--warning);margin-left:6px;">⏳ syncing</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+window.filterOrders = () => {
+  const q      = document.getElementById('orderSearch').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const filtered = state.orders.filter(o => {
+    const matchText   = !q || o.vehicle_plate.toLowerCase().includes(q);
+    const matchStatus = !status || o.payment_status === status;
+    return matchText && matchStatus;
+  });
+  renderOrders(filtered);
+};
+
+// ── REPORTS ───────────────────────────────────────────────────────────────
+async function loadReport() {
+  if (!navigator.onLine) return;
+  try {
+    const r = await fetch('/api/reports/daily');
+    const d = await r.json();
+    const s = d.data?.summary;
+    if (!s) return;
+    document.getElementById('rOrders').textContent  = s.order_count ?? '—';
+    document.getElementById('rRevenue').textContent = `£${parseFloat(s.total_revenue ?? 0).toFixed(2)}`;
+    document.getElementById('rCash').textContent    = `£${parseFloat(s.cash ?? 0).toFixed(2)}`;
+    document.getElementById('rCard').textContent    = `£${parseFloat((parseFloat(s.card||0)+parseFloat(s.online||0))).toFixed(2)}`;
+
+    const svcs = d.data?.services ?? [];
+    document.getElementById('serviceBreakdown').innerHTML =
+      '<div class="card-title">Services Today</div>' +
+      svcs.map(s =>
+        `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;">
+           <span>${s.name}</span>
+           <span>${s.count}× · £${parseFloat(s.revenue).toFixed(2)}</span>
+         </div>`
+      ).join('');
+  } catch {}
+}
+
+// ── NETWORK + SYNC LISTENERS ──────────────────────────────────────────────
+function setupNetworkListener() {
+  const updateStatus = () => {
+    const online  = navigator.onLine;
+    const dot     = document.getElementById('connDot');
+    const label   = document.getElementById('syncLabel');
+    const banner  = document.getElementById('offlineBanner');
+    dot.className   = 'dot' + (online ? '' : ' offline');
+    label.textContent = online ? 'Connected' : 'Offline';
+    banner.classList.toggle('show', !online);
+  };
+  window.addEventListener('online',  updateStatus);
+  window.addEventListener('offline', updateStatus);
+  updateStatus();
+}
+
+function setupSyncListener() {
+  window.addEventListener('sync:complete', async (e) => {
+    await loadOrders();
+    updateQueueBadge();
+  });
+  window.addEventListener('sync:conflict', (e) => {
+    console.warn('Conflict detected:', e.detail);
+  });
+  setInterval(updateQueueBadge, 5000);
+}
+
+async function updateQueueBadge() {
+  const all      = await syncQueue.getAllActions();
+  const pending  = all.filter(a => a.sync_status === 'pending').length;
+  const badge    = document.getElementById('syncBadge');
+  const label    = document.getElementById('syncLabel');
+  if (pending > 0) {
+    badge.className = 'sync-badge pending';
+    label.textContent = `${pending} pending`;
+  } else {
+    badge.className = 'sync-badge';
+    label.textContent = 'Synced';
+  }
+}
+
+// ── QUEUE PANEL ───────────────────────────────────────────────────────────
+window.showQueuePanel = async () => {
+  const all  = await syncQueue.getAllActions();
+  const list = document.getElementById('queueList');
+  if (!all.length) {
+    list.innerHTML = '<div style="color:var(--text3);text-align:center;padding:20px;">Queue empty</div>';
+  } else {
+    list.innerHTML = all.slice().reverse().map(a => `
+      <div class="queue-item">
+        <div class="qi-status ${a.sync_status}"></div>
+        <div class="qi-info">
+          <div class="qi-type">${a.entity_type}: ${a.action_type}</div>
+          <div class="qi-time">${new Date(a.created_at).toLocaleTimeString()} · retries: ${a.retry_count}</div>
+          ${a.fail_reason ? `<div style="color:var(--danger);font-size:11px;">${a.fail_reason}</div>` : ''}
+        </div>
+        <span class="badge badge-${a.sync_status === 'success' ? 'paid' : a.sync_status === 'pending' ? 'partial' : 'unpaid'}">
+          ${a.sync_status}
+        </span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('queueModal').classList.add('show');
+};
+
+window.hideQueuePanel = () => {
+  document.getElementById('queueModal').classList.remove('show');
+};
+
+// ── TABS ──────────────────────────────────────────────────────────────────
+window.switchTab = (tab) => {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['new-order', 'orders', 'reports'];
+    t.classList.toggle('active', names[i] === tab);
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${tab}`)?.classList.add('active');
+  if (tab === 'orders') loadOrders();
+  if (tab === 'reports') loadReport();
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function timeAgo(iso) {
+  const diff = (Date.now() - new Date(iso)) / 1000;
+  if (diff < 60)   return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+boot();
+</script>
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/pwa/service-worker/service-worker.js', { scope: '/' })
+    .then(reg => console.log('[SW] Registered'))
+    .catch(err => console.error('[SW] Registration failed:', err));
+}
+</script>
+</body>
+</html>

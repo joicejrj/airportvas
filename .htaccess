@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Route frontend shortcuts
+RewriteRule ^admin/?(.*)$    frontend/admin/$1    [L]
+RewriteRule ^agent/?(.*)$    frontend/agent/$1    [L]
+RewriteRule ^provider/?(.*)$ frontend/provider/$1 [L]
+RewriteRule ^customer/?(.*)$ frontend/customer/$1 [L]
+
+# Route API to backend
+RewriteRule ^api/(.*)$       backend/index.php    [L,QSA]
