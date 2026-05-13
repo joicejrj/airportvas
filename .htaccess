@@ -1,5 +1,7 @@
 RewriteEngine On
 
+# RewriteBase /jrj/airport/PHP/
+
 # Route frontend shortcuts
 RewriteRule ^admin/?(.*)$    frontend/admin/$1    [L]
 RewriteRule ^agent/?(.*)$    frontend/agent/$1    [L]

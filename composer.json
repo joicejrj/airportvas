@@ -1,0 +1,6 @@
+{
+    "require": {
+        "stripe/stripe-php": "^20.1",
+        "minishlink/web-push": "^7.0"
+    }
+}
