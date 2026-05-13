@@ -1,0 +1,17 @@
+{
+  "name": "AirVAS Provider",
+  "short_name": "Provider",
+  "description": "Airport VAS Provider portal — receive and complete jobs",
+  "id": "/provider/",
+  "start_url": "/provider/",
+  "scope": "/provider/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f6ff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    { "src": "/iconspwa/provider-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/iconspwaiconspwa/provider-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/iconspwa/provider-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

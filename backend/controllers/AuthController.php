@@ -90,4 +90,17 @@ class AuthController
 
         Response::success($row);
     }
+	
+	// GET /api/users/agents — list active agents (admin only, used by filters)
+	public function listAgents(): void
+	{
+		AuthMiddleware::require(['admin']);
+		$pdo = Database::getInstance();
+		$stmt = $pdo->query(
+			'SELECT id, name FROM users
+			 WHERE role = "agent" AND is_active = 1
+			 ORDER BY name ASC'
+		);
+		Response::success($stmt->fetchAll());
+	}
 }

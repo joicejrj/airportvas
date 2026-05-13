@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pay — AirVAS</title>
+<style>
+  :root {
+    --bg: #f0f6ff; --card: #ffffff; --accent: #0ea5e9; --accent2: #0284c7;
+    --success: #16a34a; --danger: #dc2626; --warning: #d97706;
+    --text1: #0f172a; --text2: #475569; --text3: #94a3b8; --border: #e2e8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: var(--card); border-radius: 20px; padding: 28px 24px;
+    max-width: 420px; width: 100%; box-shadow: 0 12px 48px rgba(15,23,42,0.10); }
+  .brand { text-align: center; margin-bottom: 24px; }
+  .brand .logo { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .brand .sub { font-size: 11px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+
+  .order-info { background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .order-info .row { display: flex; justify-content: space-between; padding: 6px 0; align-items:center; }
+  .order-info .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+  .order-info .value { font-size: 14px; color: var(--text1); font-weight: 600; text-align: right; }
+
+  .amount-box { text-align: center; padding: 24px 20px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border-radius: 12px; margin: 16px 0; border: 1px solid #bae6fd; }
+  .amount-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+  .amount-value { font-size: 40px; font-weight: 800; color: var(--accent); margin-top: 4px; line-height: 1; }
+
+  .pay-btn { width: 100%; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #fff;
+    border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: opacity .2s; font-family: inherit; }
+  .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pay-btn:active:not(:disabled) { transform: scale(0.98); }
+
+  .secure-row { display: flex; align-items: center; gap: 6px; justify-content: center;
+    font-size: 11px; color: var(--text3); margin-top: 14px; }
+  .secure-row .lock { font-size: 14px; }
+
+  .status { text-align: center; padding: 40px 20px; }
+  .status .icon { font-size: 64px; margin-bottom: 16px; }
+  .status .title { font-size: 22px; font-weight: 800; }
+  .status.success .title { color: var(--success); }
+  .status.error   .title { color: var(--danger); }
+  .status .sub { font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 1.5; }
+  .small { font-size: 12px; color: var(--text3); text-align: center; margin-top: 14px; line-height: 1.5; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .badge.unpaid { background: #fee2e2; color: #991b1b; }
+  .badge.paid   { background: #dcfce7; color: #166534; }
+
+  .err { color: var(--danger); font-size: 13px; text-align: center; margin-top: 12px; min-height: 18px; }
+  .skeleton { background: #e2e8f0; border-radius: 4px; height: 14px; margin: 6px 0;
+    animation: shimmer 1.2s linear infinite; background-image: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+    background-size: 200% 100%; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="brand">
+    <div class="logo">✈ AirVAS</div>
+    <div class="sub">Secure Payment</div>
+  </div>
+
+  <div id="loading">
+    <div class="skeleton" style="width:60%;margin:8px auto"></div>
+    <div class="skeleton" style="width:80%;margin:8px auto"></div>
+    <div class="skeleton" style="width:50%;margin:8px auto;height:32px"></div>
+  </div>
+
+  <div id="content" style="display:none"></div>
+</div>
+
+<script>
+const API = location.origin + '/api';
+const params = new URLSearchParams(location.search);
+const orderId = params.get('order');
+
+const loadingEl = document.getElementById('loading');
+const contentEl = document.getElementById('content');
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showError(title, sub) {
+  loadingEl.style.display = 'none';
+  contentEl.style.display = 'block';
+  contentEl.innerHTML = `
+    <div class="status error">
+      <div class="icon">⚠️</div>
+      <div class="title">${escapeHtml(title)}</div>
+      <div class="sub">${escapeHtml(sub || '')}</div>
+    </div>`;
+}
+
+async function loadOrder() {
+  if (!orderId) {
+    showError('Invalid Link', 'This payment link is missing the order reference.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/customer/order-preview/${encodeURIComponent(orderId)}`);
+    const json = await res.json();
+    if (!res.ok || !json?.data) {
+      showError('Order Not Found', json?.error || json?.message || 'This order does not exist.');
+      return;
+    }
+    renderOrder(json.data);
+  } catch (e) {
+    showError('Connection Error', 'Please check your internet and try again.');
+  }
+}
+
+function renderOrder(order) {
+  loadingEl.style.display = 'none';
+  contentEl.style.display = 'block';
+
+  if (order.payment_status === 'paid') {
+    contentEl.innerHTML = `
+      <div class="status success">
+        <div class="icon">✅</div>
+        <div class="title">Already Paid</div>
+        <div class="sub">This order has been paid. Thank you!</div>
+        <div class="small">Order ID: ${escapeHtml(order.id.slice(0, 8))}…</div>
+      </div>`;
+    return;
+  }
+
+  const isPorter = (order.vehicle_plate || '').toUpperCase() === 'PORTER';
+  const amount   = parseFloat(order.total_amount || 0).toFixed(2);
+  const services = (order.services || []).join(', ') || (isPorter ? 'Porter Service' : 'Service');
+
+  contentEl.innerHTML = `
+    <div class="order-info">
+      <div class="row">
+        <span class="label">Service</span>
+        <span class="value">${isPorter ? '🧳 ' : '🚗 '}${escapeHtml(services)}</span>
+      </div>
+      ${!isPorter ? `
+        <div class="row">
+          <span class="label">Vehicle</span>
+          <span class="value">${escapeHtml(order.vehicle_plate || '—')}</span>
+        </div>` : ''}
+      ${order.customer_name ? `
+        <div class="row">
+          <span class="label">Customer</span>
+          <span class="value">${escapeHtml(order.customer_name)}</span>
+        </div>` : ''}
+      <div class="row">
+        <span class="label">Status</span>
+        <span class="value"><span class="badge unpaid">Unpaid</span></span>
+      </div>
+    </div>
+
+    <div class="amount-box">
+      <div class="amount-label">Amount Due</div>
+      <div class="amount-value">AED ${amount}</div>
+    </div>
+
+    <button class="pay-btn" id="payBtn" onclick="startPayment()">
+      Pay AED ${amount}
+    </button>
+    <div class="err" id="err"></div>
+    <div class="secure-row">
+      <span class="lock">🔒</span> Secured by Stripe. Cards processed safely.
+    </div>
+  `;
+}
+
+async function startPayment() {
+  const btn = document.getElementById('payBtn');
+  const errEl = document.getElementById('err');
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to Stripe…';
+
+  try {
+    const res = await fetch(`${API}/customer/pay-existing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: orderId })
+    });
+    const json = await res.json();
+
+    if (!res.ok || !json?.checkout_url) {
+      errEl.textContent = json?.error || json?.message || 'Could not start payment';
+      btn.disabled = false;
+      btn.textContent = 'Try Again';
+      return;
+    }
+
+    // Redirect to Stripe Checkout
+    window.location.href = json.checkout_url;
+  } catch (e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Try Again';
+  }
+}
+
+loadOrder();
+</script>
+
+</body>
+</html>

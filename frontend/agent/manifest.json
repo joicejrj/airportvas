@@ -1,0 +1,17 @@
+{
+  "name": "AirVAS Agent",
+  "short_name": "Agent",
+  "description": "Airport VAS Agent portal — create orders and collect payments",
+  "id": "/agent/",
+  "start_url": "/agent/",
+  "scope": "/agent/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f6ff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    { "src": "/iconspwa/agent-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/iconspwa/agent-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/iconspwa/agent-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

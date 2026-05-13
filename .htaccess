@@ -1,12 +1,32 @@
 RewriteEngine On
 
-# RewriteBase /jrj/airport/PHP/
+# Static asset folders — serve directly, no rewriting
+RewriteRule ^icons/    -    [L]
+RewriteRule ^uploads/  -    [L]
+
+# Don't rewrite if the request is for a real file or directory
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
 # Route frontend shortcuts
 RewriteRule ^admin/?(.*)$    frontend/admin/$1    [L]
 RewriteRule ^agent/?(.*)$    frontend/agent/$1    [L]
 RewriteRule ^provider/?(.*)$ frontend/provider/$1 [L]
 RewriteRule ^customer/?(.*)$ frontend/customer/$1 [L]
+RewriteRule ^pay/?(.*)$      frontend/pay/$1      [L]
+RewriteRule ^book/?(.*)$     frontend/book/$1     [L]
 
 # Route API to backend
 RewriteRule ^api/(.*)$       backend/index.php    [L,QSA]
+
+# SW + manifest headers
+<Files "sw.js">
+  Header set Service-Worker-Allowed "/"
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+</Files>
+
+<Files "manifest.json">
+  Header set Content-Type "application/manifest+json"
+  Header set Cache-Control "public, max-age=300"
+</Files>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmed — AirVAS</title>
+<style>
+:root {
+  --bg: #f0f6ff; --card: #fff; --accent: #0ea5e9; --accent2: #0284c7;
+  --success: #16a34a; --danger: #dc2626; --warning: #d97706;
+  --text1: #0f172a; --text2: #475569; --text3: #94a3b8; --border: #e2e8f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100dvh; max-width: 520px; margin: 0 auto; padding: 20px; }
+
+.brand { text-align: center; padding: 20px 0 30px; }
+.brand .logo { font-size: 22px; font-weight: 800; color: var(--accent); }
+.brand .sub { font-size: 11px; color: var(--text3); letter-spacing: 1.5px;
+  text-transform: uppercase; margin-top: 4px; }
+
+.success-banner { background: linear-gradient(135deg, var(--success), #15803d);
+  color: #fff; border-radius: 16px; padding: 28px 20px; text-align: center;
+  margin-bottom: 16px; box-shadow: 0 4px 20px rgba(22,163,74,0.2); }
+.success-banner .icon { font-size: 48px; margin-bottom: 8px; }
+.success-banner h1 { font-size: 22px; font-weight: 800; }
+.success-banner p { font-size: 14px; opacity: 0.9; margin-top: 6px; }
+
+.card { background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+.card-title { font-size: 11px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.info-row { display: flex; justify-content: space-between; padding: 6px 0;
+  border-bottom: 1px solid var(--border); font-size: 14px; }
+.info-row:last-child { border-bottom: none; }
+.info-row .lbl { color: var(--text3); }
+.info-row .val { font-weight: 600; }
+
+.ref-box { background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1px solid #bae6fd; border-radius: 12px; padding: 16px;
+  text-align: center; margin-bottom: 14px; }
+.ref-box .lbl { font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .5px; }
+.ref-box .val { font-size: 22px; font-weight: 800; color: var(--accent);
+  margin-top: 4px; font-family: monospace; }
+
+/* Tracker */
+.tracker { display: flex; flex-direction: column; gap: 4px; position: relative; }
+.tracker-step {
+  display: flex; align-items: flex-start; gap: 14px; padding: 12px;
+  border-radius: 10px; transition: all .3s; position: relative;
+}
+.tracker-step::before {
+  content: ''; position: absolute; left: 27px; top: 44px;
+  width: 2px; height: calc(100% - 8px); background: var(--border);
+}
+.tracker-step:last-child::before { display: none; }
+.tracker-step.done::before { background: var(--success); }
+.tracker-step.active::before {
+  background: linear-gradient(to bottom, var(--accent), var(--border));
+}
+
+.tracker-step .dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0; background: var(--border); color: var(--text3);
+  position: relative; z-index: 1;
+}
+.tracker-step .text { flex: 1; padding-top: 4px; }
+.tracker-step .text .step-title {
+  font-size: 14px; font-weight: 600; color: var(--text3);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  flex-wrap: wrap;
+}
+.tracker-step .text .step-time {
+  font-size: 11px; color: var(--text3); font-weight: 500;
+  white-space: nowrap;
+}
+.tracker-step .text .step-sub {
+  font-size: 12px; color: var(--text3); margin-top: 3px;
+}
+
+.tracker-step.done { background: rgba(22,163,74,0.05); }
+.tracker-step.done .dot { background: var(--success); color: #fff; }
+.tracker-step.done .text .step-title { color: var(--text1); }
+.tracker-step.done .text .step-time { color: var(--success); font-weight: 600; }
+
+.tracker-step.active { background: rgba(14,165,233,0.05); }
+.tracker-step.active .dot {
+  background: var(--accent); color: #fff;
+  animation: pulse 1.5s infinite;
+}
+.tracker-step.active .text .step-title { color: var(--text1); }
+.tracker-step.active .text .step-time { color: var(--accent); font-weight: 600; }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
+}
+
+.services-block { margin-top: 6px; padding-left: 0; }
+.svc-row {
+  padding: 8px 12px; background: #f8fafc; border-radius: 8px;
+  margin-bottom: 6px; font-size: 13px; display: flex;
+  align-items: center; justify-content: space-between; gap: 10px;
+}
+.svc-row .svc-name { flex: 1; font-weight: 600; }
+.svc-row .svc-status {
+  font-size: 11px; font-weight: 700; padding: 2px 8px;
+  border-radius: 999px; text-transform: uppercase; white-space: nowrap;
+}
+.svc-status.pending { background: #fef3c7; color: #92400e; }
+.svc-status.assigned { background: #e0f2fe; color: #0284c7; }
+.svc-status.accepted { background: #dbeafe; color: #1d4ed8; }
+.svc-status.in_progress { background: #ede9fe; color: #7c3aed; }
+.svc-status.completed { background: #dcfce7; color: #166534; }
+.svc-row .svc-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+.refresh-note { font-size: 12px; color: var(--text3); text-align: center;
+  padding: 12px; }
+.refresh-note .spin {
+  display: inline-block; animation: spin 1.5s linear infinite;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.share-box { background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.share-box .label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.share-url { font-size: 11px; word-break: break-all; color: var(--accent2);
+  background: #f8fafc; padding: 8px 10px; border-radius: 6px; font-family: monospace; }
+.copy-btn { width: 100%; background: var(--accent); border: none; color: #fff;
+  padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; margin-top: 8px; }
+
+#errorScreen, #loadingScreen { text-align: center; padding: 60px 20px; }
+.error-icon { font-size: 56px; }
+.error-title { font-size: 20px; font-weight: 700; margin-top: 12px; }
+.error-sub { font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <div class="logo">✈ AirVAS</div>
+  <div class="sub">Order Tracking</div>
+</div>
+
+<div id="loadingScreen">
+  <div style="font-size:48px;animation:spin 1.5s linear infinite">⟳</div>
+  <div class="error-title" style="color:var(--text2)">Loading your order…</div>
+</div>
+
+<div id="content" style="display:none">
+
+  <div class="success-banner">
+    <div class="icon" id="bannerIcon">✅</div>
+    <h1 id="successTitle">Payment Successful</h1>
+    <p id="successSub">Your service is being arranged now.</p>
+  </div>
+
+  <div class="ref-box">
+    <div class="lbl">Order Reference</div>
+    <div class="val" id="orderRef">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Order Details</div>
+    <div id="orderInfo"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Progress</div>
+    <div class="tracker" id="tracker"></div>
+    <div class="refresh-note">
+      <span class="spin">⟳</span> Auto-refreshing every 15 seconds
+    </div>
+  </div>
+
+  <div class="card" id="servicesCard" style="display:none">
+    <div class="card-title">Service Status</div>
+    <div id="servicesList"></div>
+  </div>
+
+  <div class="share-box">
+    <div class="label">Save or share this tracking link to check status anytime:</div>
+    <div class="share-url" id="shareUrl"></div>
+    <button class="copy-btn" onclick="copyShareLink()">📋 Copy Link</button>
+  </div>
+
+  <div style="text-align:center;color:var(--text3);font-size:13px;padding:20px 0">
+    Thank you for using AirVAS — safe travels!
+  </div>
+</div>
+
+<div id="errorScreen" style="display:none">
+  <div class="error-icon">⚠️</div>
+  <div class="error-title">Couldn't Load Order</div>
+  <div class="error-sub" id="errorMsg">Please check your tracking link.</div>
+</div>
+
+<script>
+const API = location.origin + '/api';
+const params = new URLSearchParams(location.search);
+const orderId = params.get('order');
+const token   = params.get('token');
+
+const loadingEl = document.getElementById('loadingScreen');
+const contentEl = document.getElementById('content');
+const errorEl   = document.getElementById('errorScreen');
+
+let verifyAttempted = false;
+
+function showError(msg) {
+  loadingEl.style.display = 'none';
+  contentEl.style.display = 'none';
+  errorEl.style.display = 'block';
+  document.getElementById('errorMsg').textContent = msg;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Parse a MySQL-format datetime (no Z) as UTC, return Date or null
+function parseUtc(dt) {
+  if (!dt) return null;
+  const isoSafe = /Z|[+-]\d{2}:?\d{2}$/.test(dt) ? dt : dt.replace(' ', 'T') + 'Z';
+  const d = new Date(isoSafe);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Relative ("just now", "5m ago") + absolute time ("at 14:32")
+function fmtTime(dt) {
+  const d = parseUtc(dt);
+  if (!d) return '';
+  const now = new Date();
+  const diffSec = (now - d) / 1000;
+
+  let relative;
+  if (diffSec < 60)         relative = 'just now';
+  else if (diffSec < 3600)  relative = Math.round(diffSec/60) + 'm ago';
+  else if (diffSec < 86400) relative = Math.round(diffSec/3600) + 'h ago';
+  else                      relative = d.toLocaleDateString('en-AE', {day:'numeric', month:'short'});
+
+  const time = d.toLocaleTimeString('en-AE', {hour: '2-digit', minute: '2-digit'});
+
+  // For < 24h, show "5m ago · 14:32"; for older, show "12 May · 14:32"
+  if (diffSec < 86400) {
+    return relative + ' · ' + time;
+  }
+  return relative + ' · ' + time;
+}
+
+// Short formatter for per-service rows
+function fmtShort(dt) {
+  const d = parseUtc(dt);
+  if (!d) return '';
+  return d.toLocaleString('en-AE', {
+    day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+async function loadOrder() {
+  if (!orderId || !token) {
+    showError('Invalid or missing tracking link.');
+    return;
+  }
+
+  // On first load only, verify with Stripe (in case the customer just paid)
+  if (!verifyAttempted) {
+    verifyAttempted = true;
+    try {
+      await fetch(`${API}/customer/verify-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId, token: token })
+      });
+    } catch (e) { /* non-fatal */ }
+  }
+
+  try {
+    const res = await fetch(`${API}/customer/booking/${orderId}?token=${encodeURIComponent(token)}`);
+    const json = await res.json();
+    if (!res.ok || !json?.data) {
+      showError(json?.error || 'This tracking link is invalid or expired.');
+      return;
+    }
+    render(json.data);
+  } catch (e) {
+    showError('Connection error — please try again.');
+  }
+}
+
+function render(order) {
+  loadingEl.style.display = 'none';
+  contentEl.style.display = 'block';
+
+  const isPaid = order.payment_status === 'paid';
+  const banner = document.querySelector('.success-banner');
+
+  if (!isPaid) {
+    banner.style.background = 'linear-gradient(135deg, var(--warning), #b45309)';
+    document.getElementById('bannerIcon').textContent = '⏳';
+    document.getElementById('successTitle').textContent = 'Awaiting Payment Confirmation';
+    document.getElementById('successSub').textContent = 'Refreshing automatically — this usually takes a few seconds.';
+  } else {
+    banner.style.background = 'linear-gradient(135deg, var(--success), #15803d)';
+    document.getElementById('bannerIcon').textContent = '✅';
+    document.getElementById('successTitle').textContent = 'Payment Successful';
+    document.getElementById('successSub').textContent = 'Your service is being arranged now.';
+  }
+
+  document.getElementById('orderRef').textContent = 'AP-' + order.id.slice(0, 6).toUpperCase();
+
+  const isPorter = (order.vehicle_plate || '').toUpperCase() === 'PORTER';
+  document.getElementById('orderInfo').innerHTML = `
+    <div class="info-row"><span class="lbl">Service</span><span class="val">${isPorter ? '🧳 Porter' : '🚗 Vehicle Service'}</span></div>
+    ${!isPorter ? `<div class="info-row"><span class="lbl">Vehicle</span><span class="val">${escapeHtml(order.vehicle_plate)}</span></div>` : ''}
+    ${order.customer_name ? `<div class="info-row"><span class="lbl">Customer</span><span class="val">${escapeHtml(order.customer_name)}</span></div>` : ''}
+    <div class="info-row"><span class="lbl">Total</span><span class="val">AED ${parseFloat(order.total_amount||0).toFixed(2)}</span></div>
+    <div class="info-row"><span class="lbl">Paid</span><span class="val" style="color:var(--success)">AED ${parseFloat(order.paid_amount||0).toFixed(2)}</span></div>
+    <div class="info-row"><span class="lbl">Booked</span><span class="val" style="font-size:12px">${fmtShort(order.created_at)}</span></div>
+  `;
+
+  renderTracker(order);
+  renderServiceList(order);
+
+  document.getElementById('shareUrl').textContent =
+    `${location.origin}/pay/success?order=${order.id}&token=${token}`;
+}
+
+function renderTracker(order) {
+  const services = order.services || [];
+  const allCompleted  = services.length > 0 && services.every(s => s.status === 'completed');
+  const anyInProgress = services.some(s => s.status === 'in_progress');
+  const anyAccepted   = services.some(s => s.status === 'accepted');
+  const anyAssigned   = services.some(s => s.status === 'assigned');
+
+  // Derive timestamps from service rows
+  const firstAssignedAt = pickEarliest(services.map(s => s.assigned_at));
+  const firstStartedAt  = pickEarliest(services.map(s => s.started_at));
+  const lastCompletedAt = pickLatest(services.map(s => s.completed_at));
+
+  const steps = [
+    {
+      icon: '📝',
+      title: 'Booking Received',
+      sub: 'Your booking is in our system',
+      time: order.created_at,
+      state: 'done',
+    },
+    {
+      icon: '💳',
+      title: 'Payment Confirmed',
+      sub: order.payment_status === 'paid' ? 'Paid via card' : 'Awaiting confirmation…',
+      time: order.payment_status === 'paid' ? order.paid_at : null,
+      state: order.payment_status === 'paid' ? 'done' : 'active',
+    },
+    {
+      icon: '👤',
+      title: 'Provider Assigned',
+      sub: anyAssigned || anyAccepted || anyInProgress || allCompleted
+            ? 'A team member is on it'
+            : 'Looking for an available provider…',
+      time: firstAssignedAt,
+      state: anyAccepted || anyInProgress || allCompleted
+              ? 'done'
+              : (anyAssigned ? 'active' : 'pending'),
+    },
+    {
+      icon: '🔧',
+      title: 'Service In Progress',
+      sub: anyInProgress
+            ? 'Work has started on your vehicle'
+            : (allCompleted ? 'Work was completed' : 'Will start shortly'),
+      time: firstStartedAt,
+      state: allCompleted ? 'done' : (anyInProgress ? 'active' : 'pending'),
+    },
+    {
+      icon: '🎉',
+      title: 'Service Complete',
+      sub: allCompleted ? 'All done — thank you!' : 'You\'ll see this when finished',
+      time: lastCompletedAt,
+      state: allCompleted ? 'done' : 'pending',
+    },
+  ];
+
+  document.getElementById('tracker').innerHTML = steps.map(s => `
+    <div class="tracker-step ${s.state}">
+      <div class="dot">${s.state === 'done' ? '✓' : s.icon}</div>
+      <div class="text">
+        <div class="step-title">
+          <span>${s.title}</span>
+          ${s.time && (s.state === 'done' || s.state === 'active')
+            ? `<span class="step-time">${fmtTime(s.time)}</span>`
+            : ''}
+        </div>
+        <div class="step-sub">${escapeHtml(s.sub)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderServiceList(order) {
+  const services = order.services || [];
+  // Only show this card when there are multiple services or extra detail is useful
+  if (services.length <= 1) {
+    document.getElementById('servicesCard').style.display = 'none';
+    return;
+  }
+  document.getElementById('servicesCard').style.display = 'block';
+
+  document.getElementById('servicesList').innerHTML = services.map(s => {
+    const statusLabel = {
+      pending:'Pending', assigned:'Assigned', accepted:'Accepted',
+      in_progress:'In Progress', completed:'Completed'
+    }[s.status] || s.status;
+
+    let timeText = '';
+    if (s.completed_at) timeText = '✓ ' + fmtShort(s.completed_at);
+    else if (s.started_at) timeText = '▶ Started ' + fmtTime(s.started_at);
+    else if (s.assigned_at) timeText = '👤 Assigned ' + fmtTime(s.assigned_at);
+
+    return `
+      <div class="svc-row">
+        <span class="svc-name">${escapeHtml(s.service_name)}</span>
+        <span class="svc-status ${s.status}">${statusLabel}</span>
+        ${timeText ? `<span class="svc-time">${timeText}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// Pick the earliest non-null timestamp from a list
+function pickEarliest(arr) {
+  const dates = arr.filter(Boolean).map(parseUtc).filter(Boolean);
+  if (!dates.length) return null;
+  return dates.reduce((a, b) => a < b ? a : b).toISOString();
+}
+
+// Pick the latest non-null timestamp from a list
+function pickLatest(arr) {
+  const dates = arr.filter(Boolean).map(parseUtc).filter(Boolean);
+  if (!dates.length) return null;
+  return dates.reduce((a, b) => a > b ? a : b).toISOString();
+}
+
+function copyShareLink() {
+  const url = document.getElementById('shareUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Link', 2000);
+  });
+}
+
+loadOrder();
+setInterval(loadOrder, 15000);
+</script>
+
+</body>
+</html>

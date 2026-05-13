@@ -2,398 +2,535 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book Car Services — Airport Parking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0ea5e9">
+<title>AirVAS — Book a Service</title>
 <style>
-  :root {
-    --bg: #f8fafc; --card: #ffffff; --accent: #0ea5e9; --accent2: #0284c7;
-    --success: #16a34a; --danger: #dc2626; --warning: #d97706;
-    --text1: #0f172a; --text2: #475569; --text3: #94a3b8;
-    --border: #e2e8f0; --radius: 16px;
-    --font: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text1); font-family: var(--font); min-height: 100dvh; }
+:root {
+  --bg:#f0f6ff; --card:#ffffff; --accent:#0ea5e9; --accent2:#0284c7;
+  --success:#16a34a; --danger:#dc2626; --warning:#d97706;
+  --text1:#0f172a; --text2:#475569; --text3:#94a3b8; --border:#e2e8f0;
+  --radius:14px; --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text1); font-family: var(--font);
+  min-height: 100dvh; max-width: 520px; margin: 0 auto; padding-bottom: 100px; }
 
-  .header {
-    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-    padding: 32px 20px 80px; text-align: center; position: relative;
-  }
-  .header-logo { font-size: 24px; font-weight: 800; color: white; letter-spacing: -0.5px; }
-  .header-sub  { font-size: 14px; color: rgba(255,255,255,.8); margin-top: 4px; }
-  .header-plate {
-    position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%);
-    background: white; border-radius: 12px; padding: 12px 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,.12); font-size: 22px; font-weight: 800;
-    letter-spacing: 2px; min-width: 200px; text-align: center;
-    border: 2px solid var(--border);
-  }
+/* HEADER */
+.header { background: linear-gradient(135deg,#0ea5e9,#0284c7); padding: 24px 20px;
+  color: #fff; text-align: center; }
+.header-logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.header-sub { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+.header-plate { display: inline-block; background: rgba(255,255,255,0.2); padding: 8px 18px;
+  border-radius: 8px; font-size: 18px; font-weight: 800; letter-spacing: 2px; margin-top: 12px;
+  min-width: 140px; }
 
-  .content { padding: 40px 16px 32px; max-width: 480px; margin: 0 auto; }
+/* PROGRESS */
+.progress { padding: 0 20px; margin-top: -10px; position: relative; z-index: 2; }
+.progress-bar { background: rgba(255,255,255,0.4); height: 4px; border-radius: 2px; overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+.progress-fill { background: var(--success); height: 100%; transition: width .3s; }
 
-  .section { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
-             padding: 20px; margin-bottom: 16px; }
-  .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase;
-                   letter-spacing: .5px; margin-bottom: 16px; }
+/* CONTENT */
+.content { padding: 20px 16px 0; }
 
-  label { font-size: 14px; color: var(--text2); display: block; margin-bottom: 6px; }
-  input, select, textarea {
-    width: 100%; border: 1.5px solid var(--border); background: var(--bg);
-    color: var(--text1); padding: 12px 14px; border-radius: 10px;
-    font-size: 15px; font-family: var(--font); outline: none;
-    transition: border-color .2s;
-  }
-  input:focus, select:focus { border-color: var(--accent); }
-  .form-row { margin-bottom: 14px; }
+/* SECTIONS */
+.section { background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+.section.locked { opacity: 0.5; pointer-events: none; }
+.section-title { font-size: 12px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+.req { color: var(--danger); font-weight: 800; }
 
-  /* SERVICE CARDS */
-  .services-list { display: flex; flex-direction: column; gap: 10px; }
-  .service-row {
-    display: flex; align-items: center; gap: 12px; padding: 14px;
-    border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer;
-    transition: all .2s;
-  }
-  .service-row.selected { border-color: var(--accent); background: rgba(14,165,233,.05); }
-  .service-check {
-    width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border);
-    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    transition: all .2s;
-  }
-  .service-row.selected .service-check { background: var(--accent); border-color: var(--accent); }
-  .service-row.selected .service-check::after { content: '✓'; color: white; font-size: 12px; font-weight: 700; }
-  .service-info { flex: 1; }
-  .service-info-name { font-size: 15px; font-weight: 600; }
-  .service-info-desc { font-size: 13px; color: var(--text2); margin-top: 2px; }
-  .service-price { font-size: 16px; font-weight: 700; color: var(--accent); }
+/* FORM */
+label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 5px; font-weight: 500; }
+input, select, textarea {
+  width: 100%; border: 1.5px solid var(--border); background: var(--bg); color: var(--text1);
+  padding: 12px 14px; border-radius: 10px; font-size: 15px; font-family: var(--font);
+  outline: none; transition: border-color .2s; -webkit-appearance: none;
+}
+input:focus, select:focus { border-color: var(--accent); background: #fff; }
+.form-row { margin-bottom: 12px; }
 
-  /* ORDER SUMMARY */
-  .summary-row {
-    display: flex; justify-content: space-between; padding: 8px 0;
-    border-bottom: 1px solid var(--border); font-size: 14px;
-  }
-  .summary-row:last-child { border-bottom: none; }
-  .summary-total { font-size: 20px; font-weight: 800; }
+/* SERVICE CARDS — picker */
+.service-cards { display: flex; flex-direction: column; gap: 12px; }
+.svc-card { display: flex; align-items: center; gap: 14px;
+  border: 2px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer;
+  transition: all .15s; background: var(--card); }
+.svc-card:hover, .svc-card:active { border-color: var(--accent); background: #f0f9ff; }
+.svc-card.selected { border-color: var(--accent); background: #f0f9ff;
+  box-shadow: 0 4px 12px rgba(14,165,233,.15); }
+.svc-card .svc-icon { width: 48px; height: 48px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.svc-card.wash   .svc-icon { background: #e0f2fe; }
+.svc-card.porter .svc-icon { background: #f0fdf4; }
+.svc-card.generic .svc-icon { background: #fef3c7; }
+.svc-card-info h3 { font-size: 16px; font-weight: 700; }
+.svc-card-info p  { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.svc-card-price { font-size: 17px; font-weight: 800; color: var(--accent);
+  margin-left: auto; flex-shrink: 0; white-space: nowrap; }
 
-  /* IMAGE UPLOAD */
-  .upload-area {
-    border: 2px dashed var(--border); border-radius: 12px; padding: 24px;
-    text-align: center; cursor: pointer; transition: all .2s;
-  }
-  .upload-area:hover { border-color: var(--accent); }
-  .upload-area.has-file { border-color: var(--success); background: rgba(22,163,74,.05); }
-  .upload-icon { font-size: 32px; }
-  .upload-text { font-size: 14px; color: var(--text2); margin-top: 8px; }
+/* PHOTO UPLOAD */
+.upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 24px;
+  text-align: center; cursor: pointer; transition: all .2s; background: var(--bg); }
+.upload-area:hover { border-color: var(--accent); background: #f0f9ff; }
+.upload-area.has-file { border-style: solid; border-color: var(--success); padding: 8px; }
+.upload-area.error { border-color: var(--danger); background: #fef2f2; }
+.upload-area img { width: 100%; border-radius: 8px; max-height: 220px; object-fit: cover; }
+.upload-icon { font-size: 32px; }
+.upload-text { font-size: 14px; color: var(--text3); margin-top: 6px; }
 
-  /* CTA */
-  .cta-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: white; border-top: 1px solid var(--border);
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    display: flex; align-items: center; gap: 12px;
-  }
-  .cta-total { font-size: 18px; font-weight: 800; }
-  .cta-sub   { font-size: 12px; color: var(--text3); }
-  .btn-book  {
-    flex: 1; background: var(--accent); color: white; border: none;
-    border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700;
-    font-family: var(--font); cursor: pointer; transition: background .2s;
-  }
-  .btn-book:hover    { background: var(--accent2); }
-  .btn-book:disabled { opacity: .4; cursor: not-allowed; }
+/* CTA BAR */
+.cta-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 520px; background: var(--card); border-top: 1px solid var(--border);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); display: flex; align-items: center;
+  gap: 12px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); z-index: 100; }
+.cta-total .lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.cta-total .amt { font-size: 22px; font-weight: 800; color: var(--accent); }
+.book-btn { flex: 1; background: linear-gradient(135deg,#0ea5e9,#0284c7); color: #fff;
+  border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700;
+  cursor: pointer; font-family: var(--font); transition: opacity .2s; }
+.book-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-  /* STEPS */
-  .progress-bar {
-    height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 20px;
-  }
-  .progress-fill {
-    height: 100%; background: var(--accent); border-radius: 2px;
-    transition: width .4s ease;
-  }
+/* SUCCESS SCREEN */
+#successScreen { display: none; position: fixed; inset: 0; background: var(--bg);
+  z-index: 1000; padding: 32px 20px; overflow-y: auto; }
+#successScreen.show { display: block; }
+.success-icon { width: 96px; height: 96px; border-radius: 50%;
+  background: var(--success); color: #fff; font-size: 56px;
+  display: flex; align-items: center; justify-content: center; margin: 40px auto 24px; }
+.success-title { text-align: center; font-size: 26px; font-weight: 800; }
+.success-sub   { text-align: center; font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 1.5; }
+.order-ref-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; margin: 24px 0; text-align: center; }
+.order-ref-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.order-ref-val { font-size: 22px; font-weight: 800; color: var(--text1); margin-top: 4px; font-family: monospace; }
 
-  /* SUCCESS */
-  .success-screen {
-    display: none; text-align: center; padding: 40px 20px;
-    max-width: 480px; margin: 0 auto;
-  }
-  .success-screen.show { display: block; }
-  .success-icon { font-size: 72px; margin-bottom: 16px; }
-  .success-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-  .success-sub   { font-size: 16px; color: var(--text2); margin-bottom: 24px; }
-  .order-ref {
-    background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px;
-    padding: 16px; margin-bottom: 20px; font-family: 'Courier New', monospace;
-    font-size: 18px; font-weight: 700; letter-spacing: 2px;
-  }
-  .track-step {
-    display: flex; align-items: center; gap: 12px; padding: 12px 0;
-    border-bottom: 1px solid var(--border); text-align: left;
-  }
-  .track-dot { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-               display: flex; align-items: center; justify-content: center; font-size: 14px; }
-  .track-dot.done    { background: rgba(22,163,74,.15); color: var(--success); }
-  .track-dot.active  { background: rgba(14,165,233,.15); color: var(--accent); }
-  .track-dot.waiting { background: var(--bg); color: var(--text3); border: 1.5px solid var(--border); }
-
-  body { padding-bottom: 90px; }
+/* TOAST */
+#toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 500; z-index: 9999; display: none; max-width: 90%;
+  text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.3); }
 </style>
 </head>
 <body>
 
-<!-- BOOKING FORM -->
 <div id="bookingForm">
   <div class="header">
-    <div class="header-logo">✈ Airport Parking Services</div>
-    <div class="header-sub">Quick car service while you travel</div>
-    <div class="header-plate" id="displayPlate">Enter Plate</div>
+    <div class="header-logo">✈ AirVAS</div>
+    <div class="header-sub">Quick service while you travel</div>
+    <div class="header-plate" id="displayPlate">SELECT SERVICE</div>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
   </div>
 
   <div class="content">
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill" style="width:25%"></div>
+
+    <!-- ── 1. SERVICE ── -->
+    <div class="section">
+      <div class="section-title">1. Choose a Service <span class="req">*</span></div>
+      <div class="service-cards" id="serviceCards">
+        <div style="text-align:center;padding:24px;color:var(--text3)">Loading…</div>
+      </div>
     </div>
 
-    <!-- VEHICLE SECTION -->
-    <div class="section">
-      <div class="section-title">Your Vehicle</div>
+    <!-- ── 2. VEHICLE (only for wash-style services) ── -->
+    <div class="section locked" id="vehicleSection">
+      <div class="section-title">2. Your Vehicle <span class="req">*</span></div>
       <div class="form-row">
-        <label>Number Plate *</label>
-        <input type="text" id="custPlate" placeholder="AB12 CDE" maxlength="10"
-               style="font-size:22px;font-weight:800;text-transform:uppercase;text-align:center;"
-               oninput="document.getElementById('displayPlate').textContent = this.value.toUpperCase()||'Enter Plate'">
+        <label>Number Plate <span class="req">*</span></label>
+        <input type="text" id="custPlate" placeholder="AB12 CDE" maxlength="12"
+          style="font-size:20px;font-weight:800;text-transform:uppercase;text-align:center;letter-spacing:2px"
+          oninput="onPlateInput(this.value)">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="form-row"><label>Make</label><input type="text" id="custMake" placeholder="Toyota"></div>
         <div class="form-row"><label>Model</label><input type="text" id="custModel" placeholder="Camry"></div>
       </div>
     </div>
 
-    <!-- LOCATION SECTION -->
-    <div class="section">
-      <div class="section-title">Parking Location</div>
-      <div class="form-row">
-        <label>Car Park / Zone</label>
-        <select id="custLocation">
-          <option value="">Select location…</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>Bay / Level</label>
-        <input type="text" id="custBay" placeholder="e.g. Level 2, Bay B-14">
+    <!-- ── 3. PHOTO + LOCATION (only for wash) ── -->
+    <div class="section locked" id="photoSection">
+      <div class="section-title">3. Photo &amp; Parking <span class="req">*</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5">
+        A photo helps our service team find your car. Show the vehicle along with the parking sign or bay number.
       </div>
       <div class="upload-area" id="uploadArea" onclick="document.getElementById('imgInput').click()">
         <div class="upload-icon">📷</div>
-        <div class="upload-text">Tap to add a photo of your car (optional)</div>
-        <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+        <div class="upload-text">Tap to take photo</div>
+        <input type="file" id="imgInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(this)">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+        <div class="form-row"><label>Floor / Level</label><input type="text" id="custFloor" placeholder="P2"></div>
+        <div class="form-row"><label>Bay Number</label><input type="text" id="custBay" placeholder="B-14"></div>
       </div>
     </div>
 
-    <!-- SERVICES SECTION -->
-    <div class="section">
-      <div class="section-title">Choose Services</div>
-      <div class="services-list" id="custServiceList"></div>
-    </div>
-
-    <!-- CONTACT SECTION -->
-    <div class="section">
-      <div class="section-title">Contact (for updates)</div>
+    <!-- ── 4. PORTER DETAILS (only for porter) ── -->
+    <div class="section locked" id="porterSection" style="display:none">
+      <div class="section-title">2. Where to Meet</div>
       <div class="form-row">
-        <label>Email</label>
-        <input type="email" id="custEmail" placeholder="you@example.com">
+        <label>Terminal / Gate</label>
+        <input type="text" id="custTerminal" placeholder="e.g. Terminal 1, Gate 5">
       </div>
       <div class="form-row">
-        <label>Phone</label>
-        <input type="tel" id="custPhone" placeholder="+44 7700 000000">
+        <label>Number of Bags</label>
+        <input type="number" id="custBags" placeholder="2" min="1" max="20">
       </div>
     </div>
-  </div>
-</div>
 
-<!-- SUCCESS SCREEN -->
-<div class="success-screen" id="successScreen">
-  <div class="success-icon">🎉</div>
-  <div class="success-title">Booking Confirmed!</div>
-  <div class="success-sub">We'll get to work on your car while you travel.</div>
-  <div class="order-ref" id="orderRef">AP-000000</div>
+    <!-- ── 5. CONTACT ── -->
+    <div class="section locked" id="contactSection">
+      <div class="section-title" id="contactSectionTitle">4. Your Contact <span class="req">*</span></div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">We'll use this to send updates and your receipt.</div>
+      <div class="form-row">
+        <label>Phone <span class="req">*</span></label>
+        <input type="tel" id="custPhone" placeholder="+971 50 123 4567" autocomplete="tel">
+      </div>
+      <div class="form-row">
+        <label>Name</label>
+        <input type="text" id="custName" placeholder="Your name">
+      </div>
+      <div class="form-row">
+        <label>Email (optional)</label>
+        <input type="email" id="custEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+    </div>
 
-  <div style="background:white;border-radius:16px;border:1px solid var(--border);padding:16px;margin-bottom:20px;">
-    <div class="track-step">
-      <div class="track-dot done">✓</div>
-      <div><div style="font-weight:600;">Order received</div><div style="font-size:13px;color:var(--text2);">Processing your booking</div></div>
-    </div>
-    <div class="track-step">
-      <div class="track-dot active">⏳</div>
-      <div><div style="font-weight:600;">Provider assigned</div><div style="font-size:13px;color:var(--text2);">Our team is being assigned</div></div>
-    </div>
-    <div class="track-step">
-      <div class="track-dot waiting">3</div>
-      <div><div style="font-weight:600;color:var(--text3);">Service in progress</div></div>
-    </div>
-    <div class="track-step" style="border:none">
-      <div class="track-dot waiting">4</div>
-      <div><div style="font-weight:600;color:var(--text3);">Completed</div></div>
-    </div>
-  </div>
+  </div><!-- /content -->
+</div><!-- /bookingForm -->
 
-  <a href="#" style="color:var(--accent);font-size:14px;font-weight:600;">Track your order →</a>
-</div>
-
-<!-- CTA BAR (hidden on success) -->
+<!-- CTA -->
 <div class="cta-bar" id="ctaBar">
-  <div>
-    <div class="cta-total" id="ctaTotal">£0.00</div>
-    <div class="cta-sub" id="ctaCount">Select services above</div>
+  <div class="cta-total">
+    <div class="lbl">Total</div>
+    <div class="amt" id="ctaTotal">AED 0</div>
   </div>
-  <button class="btn-book" id="bookBtn" onclick="submitBooking()" disabled>Book Now</button>
+  <button class="book-btn" id="bookBtn" onclick="submitBooking()" disabled>Book Now</button>
 </div>
+
+<!-- SUCCESS -->
+<div id="successScreen">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Booking Confirmed</div>
+  <div class="success-sub">We've received your request. A team member will be assigned shortly.</div>
+  <div class="order-ref-box">
+    <div class="order-ref-lbl">Reference Number</div>
+    <div class="order-ref-val" id="orderRef">—</div>
+  </div>
+  <div style="text-align:center;color:var(--text2);font-size:13px;margin-top:20px;line-height:1.6">
+    Save this reference number. We'll be in touch on the phone number you provided.
+  </div>
+  <button class="book-btn" style="margin-top:24px;width:100%" onclick="location.reload()">Make Another Booking</button>
+</div>
+
+<div id="toast"></div>
 
 <script>
-const API = '/api';
-let services  = [];
-let locations = [];
-let selected  = [];
-let imgFile   = null;
+const API = location.origin + '/api';
+
+let services = [];
+let selectedService = null;   // single service (not multi)
+let imgFile = null;
+let imgDataUrl = null;        // base64 for inline image_path
+
+// Drop service workers from other portals
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => { if (!r.scope.includes('/customer/')) r.unregister(); });
+  }).catch(()=>{});
+}
 
 async function init() {
   try {
-    const [sr, lr] = await Promise.all([
-      fetch(`${API}/services`).then(r => r.json()),
-      fetch(`${API}/locations`).then(r => r.json()),
-    ]);
-    services  = sr.data  ?? [];
-    locations = lr.data ?? [];
+    const sr = await fetch(`${API}/services`);
+    const j  = await sr.json();
+    services = j?.data || [];
   } catch {
-    services  = [
-      { id: 's1', name: 'Basic Wash',  description: 'Exterior hand wash', base_price: 15 },
-      { id: 's2', name: 'Full Valet',  description: 'Interior + exterior deep clean', base_price: 45 },
-      { id: 's3', name: 'Polish',      description: 'Machine polish', base_price: 35 },
-    ];
+    services = [];
   }
   renderServices();
-  renderLocations();
 
-  // Pre-fill plate from URL param (QR code flow)
+  // Pre-fill plate from QR-code URL params
   const params = new URLSearchParams(location.search);
   const plate  = params.get('plate') || params.get('p') || '';
   if (plate) {
     document.getElementById('custPlate').value = plate.toUpperCase();
     document.getElementById('displayPlate').textContent = plate.toUpperCase();
   }
-  if (params.get('zone')) {
-    document.getElementById('custBay').value = params.get('zone');
-  }
+  if (params.get('zone'))  document.getElementById('custBay').value = params.get('zone');
+}
+
+function getServicePrice(s) {
+  // Backend column is `price`. Old code expected `base_price`. Handle both.
+  const raw = s?.price ?? s?.base_price ?? 0;
+  return parseFloat(raw) || 0;
+}
+
+function getServiceType(s) {
+  const name = (s.name || '').toLowerCase();
+  if (name.includes('porter')) return 'porter';
+  if (name.includes('wash') || name.includes('clean') || name.includes('valet') || name.includes('polish')) return 'wash';
+  return 'generic';
+}
+
+function getServiceIcon(type) {
+  if (type === 'porter') return '🧳';
+  if (type === 'wash')   return '🚗';
+  return '⭐';
 }
 
 function renderServices() {
-  const list = document.getElementById('custServiceList');
-  list.innerHTML = services.map(s => `
-    <div class="service-row" id="csr-${s.id}" onclick="toggleSvc('${s.id}')">
-      <div class="service-check"></div>
-      <div class="service-info">
-        <div class="service-info-name">${s.name}</div>
-        <div class="service-info-desc">${s.description ?? ''}</div>
-      </div>
-      <div class="service-price">£${parseFloat(s.base_price).toFixed(2)}</div>
-    </div>
-  `).join('');
-}
-
-function renderLocations() {
-  const sel = document.getElementById('custLocation');
-  locations.forEach(l => {
-    const o = document.createElement('option');
-    o.value = l.id;
-    o.textContent = `${l.name} — Zone ${l.zone}`;
-    sel.appendChild(o);
-  });
-}
-
-function toggleSvc(id) {
-  const idx = selected.findIndex(s => s.service_id === id);
-  if (idx > -1) {
-    selected.splice(idx, 1);
-    document.getElementById(`csr-${id}`)?.classList.remove('selected');
-  } else {
-    const svc = services.find(s => s.id === id);
-    selected.push({ service_id: id, price: parseFloat(svc.base_price) });
-    document.getElementById(`csr-${id}`)?.classList.add('selected');
+  const list = document.getElementById('serviceCards');
+  if (!services.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3)">No services available right now.</div>';
+    return;
   }
-  updateCTA();
+  list.innerHTML = services.map(s => {
+    const price = getServicePrice(s);
+    const type  = getServiceType(s);
+    return `
+      <div class="svc-card ${type}" id="csr-${s.id}" onclick="selectService('${s.id}')">
+        <div class="svc-icon">${getServiceIcon(type)}</div>
+        <div class="svc-card-info">
+          <h3>${escapeHtml(s.name)}</h3>
+          <p>${escapeHtml(s.description || '')}</p>
+        </div>
+        <div class="svc-card-price">AED ${price.toFixed(2)}</div>
+      </div>`;
+  }).join('');
 }
 
-function updateCTA() {
-  const total = selected.reduce((s, i) => s + i.price, 0);
-  document.getElementById('ctaTotal').textContent  = `£${total.toFixed(2)}`;
-  document.getElementById('ctaCount').textContent  =
-    selected.length > 0
-      ? `${selected.length} service${selected.length > 1 ? 's' : ''} selected`
-      : 'Select services above';
-  document.getElementById('bookBtn').disabled = selected.length === 0;
-  document.getElementById('progressFill').style.width =
-    selected.length > 0 ? '75%' : '25%';
+function selectService(id) {
+  const svc = services.find(s => s.id === id);
+  if (!svc) return;
+  selectedService = svc;
+
+  // Update cards
+  document.querySelectorAll('.svc-card').forEach(el => el.classList.remove('selected'));
+  document.getElementById('csr-' + id).classList.add('selected');
+
+  // Show/hide sections based on service type
+  const type = getServiceType(svc);
+  const vehicleSec = document.getElementById('vehicleSection');
+  const photoSec   = document.getElementById('photoSection');
+  const porterSec  = document.getElementById('porterSection');
+  const contactSec = document.getElementById('contactSection');
+  const contactTitle = document.getElementById('contactSectionTitle');
+
+  if (type === 'porter') {
+    vehicleSec.style.display = 'none';
+    photoSec.style.display   = 'none';
+    porterSec.style.display  = 'block';
+    porterSec.classList.remove('locked');
+    contactTitle.innerHTML = '3. Your Contact <span class="req">*</span>';
+  } else {
+    vehicleSec.style.display = 'block';
+    photoSec.style.display   = 'block';
+    porterSec.style.display  = 'none';
+    vehicleSec.classList.remove('locked');
+    photoSec.classList.remove('locked');
+    contactTitle.innerHTML = '4. Your Contact <span class="req">*</span>';
+  }
+  contactSec.classList.remove('locked');
+
+  // Header label + CTA + progress
+  if (type === 'porter') {
+    document.getElementById('displayPlate').textContent = '🧳 PORTER';
+  } else {
+    const plate = document.getElementById('custPlate').value.trim().toUpperCase();
+    document.getElementById('displayPlate').textContent = plate || 'ENTER PLATE';
+  }
+
+  const price = getServicePrice(svc);
+  document.getElementById('ctaTotal').textContent = 'AED ' + price.toFixed(2);
+  document.getElementById('bookBtn').disabled = false;
+  document.getElementById('progressFill').style.width = '50%';
+
+  // Scroll to next section
+  setTimeout(() => {
+    const next = type === 'porter' ? porterSec : vehicleSec;
+    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+function onPlateInput(val) {
+  const up = (val || '').toUpperCase();
+  document.getElementById('displayPlate').textContent = up || 'ENTER PLATE';
 }
 
 function handleImageUpload(input) {
-  if (input.files?.[0]) {
-    imgFile = input.files[0];
+  if (!input.files?.[0]) return;
+  imgFile = input.files[0];
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgDataUrl = e.target.result;
     const area = document.getElementById('uploadArea');
+    area.innerHTML = `<img src="${imgDataUrl}" alt="Vehicle photo">`;
     area.classList.add('has-file');
-    area.querySelector('.upload-text').textContent = imgFile.name;
-  }
+    area.classList.remove('error');
+  };
+  reader.readAsDataURL(imgFile);
+
+  // Allow re-picking same file later
+  input.value = '';
 }
 
 async function submitBooking() {
-  const plate = document.getElementById('custPlate').value.trim().toUpperCase();
-  if (!plate) { alert('Please enter your vehicle plate.'); return; }
-  if (selected.length === 0) { alert('Please select at least one service.'); return; }
+  if (!selectedService) {
+    showToast('Please choose a service');
+    return;
+  }
 
-  document.getElementById('bookBtn').disabled = true;
-  document.getElementById('bookBtn').textContent = 'Processing…';
+  const type   = getServiceType(selectedService);
+  const phone  = document.getElementById('custPhone').value.trim();
+  const email  = document.getElementById('custEmail').value.trim();
+  const name   = document.getElementById('custName').value.trim();
+
+  // Validate
+  if (!phone && !email) {
+    showToast('Phone or email is required');
+    document.getElementById('custPhone').focus();
+    return;
+  }
+
+  let plate, vehicleMake, vehicleModel, locStr, notes;
+
+  if (type === 'porter') {
+    plate = 'PORTER';
+    vehicleMake = null;
+    vehicleModel = null;
+    const terminal = document.getElementById('custTerminal').value.trim();
+    const bags     = document.getElementById('custBags').value.trim();
+    notes = [terminal && ('Terminal: ' + terminal), bags && ('Bags: ' + bags)].filter(Boolean).join(' · ') || null;
+    locStr = terminal || null;
+  } else {
+    plate        = document.getElementById('custPlate').value.trim().toUpperCase();
+    vehicleMake  = document.getElementById('custMake').value.trim()  || null;
+    vehicleModel = document.getElementById('custModel').value.trim() || null;
+    const floor  = document.getElementById('custFloor').value.trim();
+    const bay    = document.getElementById('custBay').value.trim();
+    locStr       = [floor, bay].filter(Boolean).join(' / ') || 'See photo';
+
+    if (!plate) {
+      showToast('Please enter your vehicle plate');
+      document.getElementById('custPlate').focus();
+      return;
+    }
+    if (!imgDataUrl) {
+      showToast('A photo is required so we can find your car');
+      const ua = document.getElementById('uploadArea');
+      ua.classList.add('error');
+      ua.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    notes = locStr;
+  }
+
+  const btn = document.getElementById('bookBtn');
+  btn.disabled = true;
+  btn.textContent = 'Booking…';
+	
+	// Upload image first if we have one
+	let imagePath = null;
+	if (imgDataUrl && type !== 'porter') {
+	  try {
+		const blob = await fetch(imgDataUrl).then(r => r.blob());
+		const fd = new FormData();
+		fd.append('image', blob, 'car.jpg');
+		const upRes = await fetch(API + '/customer/upload', {
+		  method: 'POST',
+		  body: fd
+		});
+		const upJson = await upRes.json().catch(() => ({}));
+		if (!upRes.ok || !upJson?.path) {
+		  showToast(upJson?.error || 'Photo upload failed');
+		  btn.disabled = false;
+		  btn.textContent = 'Book Now';
+		  return;
+		}
+		imagePath = upJson.path;
+	  } catch (e) {
+		showToast('Photo upload error');
+		btn.disabled = false;
+		btn.textContent = 'Book Now';
+		return;
+	  }
+	}
+
+  const payload = {
+    vehicle_plate:  plate,
+    vehicle_make:   vehicleMake,
+    vehicle_model:  vehicleModel,
+    customer_email: email || null,
+    customer_phone: phone || null,
+    customer_name:  name  || null,
+    notes:          notes,
+    services: [{
+      service_id:       selectedService.id,
+      location_details: locStr,
+      image_path:       imagePath,
+    }],
+    source: 'customer_qr',
+  };
 
   try {
-    // Upload image if provided
-    let imagePath = null;
-    if (imgFile) {
-      const fd = new FormData();
-      fd.append('image', imgFile);
-      const ir = await fetch(`${API}/customer/upload`, { method: 'POST', body: fd });
-      if (ir.ok) {
-        const id = await ir.json();
-        imagePath = id.path;
-      }
-    }
-
-    const payload = {
-      vehicle_plate:  plate,
-      vehicle_make:   document.getElementById('custMake').value,
-      vehicle_model:  document.getElementById('custModel').value,
-      customer_email: document.getElementById('custEmail').value,
-      customer_phone: document.getElementById('custPhone').value,
-      location_id:    document.getElementById('custLocation').value,
-      location_details: document.getElementById('custBay').value,
-      services: selected.map(s => ({ ...s, image_path: imagePath })),
-      source:   'customer_qr',
-    };
-
     const r = await fetch(`${API}/customer/booking`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload),
     });
+    const result = await r.json().catch(() => ({}));
 
-    if (!r.ok) throw new Error('Booking failed');
+    if (!r.ok || !result.success) {
+      showToast(result.error || result.message || 'Booking failed');
+      btn.disabled = false;
+      btn.textContent = 'Book Now';
+      return;
+    }
 
-    const result = await r.json();
-    const refNum = 'AP-' + result.data?.id?.slice(0, 6).toUpperCase();
+    const id = result.order_id || result.data?.id || '';
+    const refNum = 'AP-' + (id ? id.slice(0, 6).toUpperCase() : Date.now().toString(36).slice(-6).toUpperCase());
     document.getElementById('orderRef').textContent = refNum;
     document.getElementById('bookingForm').style.display = 'none';
     document.getElementById('ctaBar').style.display      = 'none';
     document.getElementById('successScreen').classList.add('show');
+    document.getElementById('progressFill').style.width = '100%';
+	  
+	  	// const id = result.order_id;
+		const token = result.tracking_token;
 
+		if (result.checkout_url) {
+		  // Send the customer to Stripe Checkout
+		  window.location.href = result.checkout_url;
+		  return;
+		}
+
+		// Fallback if no checkout_url came back (shouldn't happen, but…)
+		showToast('Booking saved but no payment URL — contact support');
+		btn.disabled = false;
+		btn.textContent = 'Book Now';
+	  
   } catch (err) {
-    alert('Booking failed. Please try again or ask an agent for help.');
-    document.getElementById('bookBtn').disabled    = false;
-    document.getElementById('bookBtn').textContent = 'Book Now';
+    showToast('Connection error — please try again');
+    btn.disabled = false;
+    btn.textContent = 'Book Now';
   }
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2800);
 }
 
 init();

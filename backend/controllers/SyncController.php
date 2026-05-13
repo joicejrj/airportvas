@@ -8,6 +8,7 @@ namespace App\Controllers;
 use App\Config\Database;
 use App\Core\Response;
 use App\Middleware\AuthMiddleware;
+use App\Helpers\OrderNumber;
 
 /**
  * POST /api/sync
@@ -113,99 +114,106 @@ class SyncController
     }
 
     // ── ORDER CREATE ───────────────────────────────────────────────────────
-    private function createOrder(
-        \PDO $pdo,
-        array $payload,
-        array $user,
-        string $actionId,
-        array &$results
-    ): void {
-        // Validate required fields
-        if (empty($payload['vehicle_plate']) || empty($payload['services'])) {
-            $results['failed'][] = ['action_id' => $actionId, 'reason' => 'vehicle_plate and services required'];
-            return;
-        }
+	private function createOrder(
+		\PDO $pdo,
+		array $payload,
+		array $user,
+		string $actionId,
+		array &$results
+	): void {
+		// Validate required fields
+		if (empty($payload['vehicle_plate']) || empty($payload['services'])) {
+			$results['failed'][] = ['action_id' => $actionId, 'reason' => 'vehicle_plate and services required'];
+			return;
+		}
 
-        $orderId    = $payload['id'] ?? $this->newUUID($pdo);
-        $totalPrice = 0.0;
+		$orderId    = $payload['id'] ?? $this->newUUID($pdo);
+		$totalPrice = 0.0;
 
-        // Validate services exist + calc total
-        $serviceIds = array_column($payload['services'], 'service_id');
-        if (empty($serviceIds)) {
-            $results['failed'][] = ['action_id' => $actionId, 'reason' => 'No services provided'];
-            return;
-        }
+		// Validate services exist + calc total
+		$serviceIds = array_column($payload['services'], 'service_id');
+		if (empty($serviceIds)) {
+			$results['failed'][] = ['action_id' => $actionId, 'reason' => 'No services provided'];
+			return;
+		}
 
-        $inClause = implode(',', array_fill(0, count($serviceIds), '?'));
-        $stmt = $pdo->prepare("SELECT id, base_price FROM services WHERE id IN ({$inClause}) AND is_active = 1");
-        $stmt->execute($serviceIds);
-        $serviceMap = [];
-        while ($row = $stmt->fetch()) {
-            $serviceMap[$row['id']] = (float)$row['base_price'];
-        }
+		$inClause = implode(',', array_fill(0, count($serviceIds), '?'));
+		// NOTE: services table uses `price` (matches CustomerController). 
+		// If yours is `base_price`, change both occurrences below.
+		$stmt = $pdo->prepare("SELECT id, price FROM services WHERE id IN ({$inClause}) AND is_active = 1");
+		$stmt->execute($serviceIds);
+		$serviceMap = [];
+		while ($row = $stmt->fetch()) {
+			$serviceMap[$row['id']] = (float)$row['price'];
+		}
 
-        foreach ($payload['services'] as $svc) {
-            if (!isset($serviceMap[$svc['service_id']])) {
-                $results['failed'][] = ['action_id' => $actionId, 'reason' => "Invalid service: {$svc['service_id']}"];
-                return;
-            }
-            $totalPrice += $svc['price'] ?? $serviceMap[$svc['service_id']];
-        }
+		foreach ($payload['services'] as $svc) {
+			if (!isset($serviceMap[$svc['service_id']])) {
+				$results['failed'][] = ['action_id' => $actionId, 'reason' => "Invalid service: {$svc['service_id']}"];
+				return;
+			}
+			$totalPrice += $svc['price'] ?? $serviceMap[$svc['service_id']];
+		}
 
-        // Insert order
-        $stmt = $pdo->prepare(
-            'INSERT INTO orders
-             (id, customer_id, customer_name, customer_phone, customer_email,
-              vehicle_plate, vehicle_make, vehicle_model, notes,
-              total_amount, paid_amount, payment_status, created_by, source, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,0,"unpaid",?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP())'
-        );
-        $stmt->execute([
-            $orderId,
-            $payload['customer_id']    ?? null,
-            $payload['customer_name']  ?? null,
-            $payload['customer_phone'] ?? null,
-            $payload['customer_email'] ?? null,
-            $payload['vehicle_plate'],
-            $payload['vehicle_make']   ?? null,
-            $payload['vehicle_model']  ?? null,
-            $payload['notes']          ?? null,
-            round($totalPrice, 2),
-            $user['id'],
-            $payload['source'] ?? 'agent',
-        ]);
+		// Reserve the next sequential order number (locks counters row)
+		$orderNumber = OrderNumber::next($pdo);
 
-        // Insert order_services
-        $svcStmt = $pdo->prepare(
-            'INSERT INTO order_services
-             (id, order_id, service_id, status, price, location_details, location_id, created_at, updated_at)
-             VALUES (?,?,?,"pending",?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP())'
-        );
+		// Insert order
+		$stmt = $pdo->prepare(
+			'INSERT INTO orders
+			 (id, order_number, customer_id, customer_name, customer_phone, customer_email,
+			  vehicle_plate, vehicle_make, vehicle_model, notes,
+			  total_amount, paid_amount, payment_status, created_by, source, created_at, updated_at)
+			 VALUES (?,?,?,?,?,?,?,?,?,?,?,0,"unpaid",?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP())'
+		);
+		$stmt->execute([
+			$orderId,
+			$orderNumber,
+			$payload['customer_id']    ?? null,
+			$payload['customer_name']  ?? null,
+			$payload['customer_phone'] ?? null,
+			$payload['customer_email'] ?? null,
+			$payload['vehicle_plate'],
+			$payload['vehicle_make']   ?? null,
+			$payload['vehicle_model']  ?? null,
+			$payload['notes']          ?? null,
+			round($totalPrice, 2),
+			$user['id'],
+			$payload['source'] ?? 'agent',
+		]);
 
-        $createdServiceIds = [];
-        foreach ($payload['services'] as $svc) {
-            $svcId = $svc['id'] ?? $this->newUUID($pdo);
-            $svcStmt->execute([
-                $svcId,
-                $orderId,
-                $svc['service_id'],
-                $svc['price'] ?? $serviceMap[$svc['service_id']],
-                $svc['location_details'] ?? null,
-                $svc['location_id']      ?? null,
-            ]);
-            $createdServiceIds[] = $svcId;
-        }
+		// Insert order_services
+		$svcStmt = $pdo->prepare(
+			'INSERT INTO order_services
+			 (id, order_id, service_id, status, price, location_details, location_id, created_at, updated_at)
+			 VALUES (?,?,?,"pending",?,?,?,UTC_TIMESTAMP(),UTC_TIMESTAMP())'
+		);
 
-        $results['success'][] = [
-            'action_id'          => $actionId,
-            'entity_type'        => 'order',
-            'server_id'          => $orderId,
-            'service_ids'        => $createdServiceIds,
-        ];
+		$createdServiceIds = [];
+		foreach ($payload['services'] as $svc) {
+			$svcId = $svc['id'] ?? $this->newUUID($pdo);
+			$svcStmt->execute([
+				$svcId,
+				$orderId,
+				$svc['service_id'],
+				$svc['price'] ?? $serviceMap[$svc['service_id']],
+				$svc['location_details'] ?? null,
+				$svc['location_id']      ?? null,
+			]);
+			$createdServiceIds[] = $svcId;
+		}
 
-        // Trigger auto-assignment (non-blocking — run after commit via queue or inline)
-        $this->scheduleAutoAssignment($pdo, $orderId);
-    }
+		$results['success'][] = [
+			'action_id'    => $actionId,
+			'entity_type'  => 'order',
+			'server_id'    => $orderId,
+			'order_number' => $orderNumber,    // ← client uses this to update its cache
+			'service_ids'  => $createdServiceIds,
+		];
+
+		// Trigger auto-assignment (non-blocking — run after commit via queue or inline)
+		$this->scheduleAutoAssignment($pdo, $orderId);
+	}
 
     // ── ORDER UPDATE ───────────────────────────────────────────────────────
     private function updateOrder(
@@ -367,32 +375,51 @@ class SyncController
             return;
         }
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO payments
-             (id, order_id, payment_method, amount, transaction_ref, uuid_ref, status, recorded_by, created_at)
-             VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())'
-        );
-        $stmt->execute([
-            $payload['order_id'],
-            $payload['payment_method'] ?? 'cash',
-            round((float)$payload['amount'], 2),
-            $payload['transaction_ref'] ?? null,
-            $uuidRef,
-            $payload['status']          ?? 'success',
-            $user['id'],
-        ]);
-        $paymentId = $pdo->lastInsertId();
+        // Generate UUID up-front so we can return it
+		$paymentId = $this->newUUID($pdo);
 
-        $results['success'][] = [
-            'action_id'   => $actionId,
-            'entity_type' => 'payment',
-            'server_id'   => $paymentId,
-        ];
+		$stmt = $pdo->prepare(
+			'INSERT INTO payments
+			 (id, order_id, payment_method, amount, transaction_ref, uuid_ref, status, recorded_by, created_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())'
+		);
+		$stmt->execute([
+			$paymentId,
+			$payload['order_id'],
+			$payload['payment_method'] ?? 'cash',
+			round((float)$payload['amount'], 2),
+			$payload['transaction_ref'] ?? null,
+			$uuidRef,
+			$payload['status']          ?? 'success',
+			$user['id'],
+		]);
+
+		$results['success'][] = [
+			'action_id'   => $actionId,
+			'entity_type' => 'payment',
+			'server_id'   => $paymentId,
+		];
+		
+		// If this payment took the order to 'paid', kick off assignment
+		$check = $pdo->prepare('SELECT payment_status FROM orders WHERE id = ?');
+		$check->execute([$payload['order_id']]);
+		if ($check->fetchColumn() === 'paid') {
+			$pdo->prepare('UPDATE orders SET was_paid = 1 WHERE id = ? AND was_paid = 0')
+				->execute([$payload['order_id']]);
+			(new \App\Helpers\AssignmentEngine($pdo))->assignAllPendingForOrder($payload['order_id']);
+		}
     }
 
     // ── AUTO-ASSIGNMENT SCHEDULER ──────────────────────────────────────────
     private function scheduleAutoAssignment(\PDO $pdo, string $orderId): void
     {
+		// Only assign if the order is fully paid (payment may have come in the same sync batch)
+		$check = $pdo->prepare('SELECT payment_status FROM orders WHERE id = ?');
+		$check->execute([$orderId]);
+		if ($check->fetchColumn() !== 'paid') {
+			return; // Engine will pick it up when the payment lands
+		}
+		
         // Pull all pending services and assign immediately
         $stmt = $pdo->prepare('SELECT id FROM order_services WHERE order_id = ? AND status = "pending"');
         $stmt->execute([$orderId]);

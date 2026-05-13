@@ -1,22 +1,17 @@
 <?php
 // backend/config/config.php
 
-// define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-// define('DB_NAME', getenv('DB_NAME') ?: 'airport_vas');
-// define('DB_USER', getenv('DB_USER') ?: 'airport_vas_user');
-// define('DB_PASS', getenv('DB_PASS') ?: 'b2JczD@8zx*Wh5cp');
-
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('DB_NAME') ?: 'airport');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+define('DB_NAME', getenv('DB_NAME') ?: 'airport_vas');
+define('DB_USER', getenv('DB_USER') ?: 'airport_vas_user');
+define('DB_PASS', getenv('DB_PASS') ?: 'b2JczD@8zx*Wh5cp');
 
 define('APP_SECRET', 'sddffGhr6544Hfgffdf');
 define('SESSION_LIFETIME', 86400 * 7); // 7 days
 
 // Assignment engine
 define('ASSIGNMENT_ACCEPT_TIMEOUT_MINUTES', 5);
-define('ASSIGNMENT_MAX_ATTEMPTS',            3);
+define('ASSIGNMENT_MAX_ATTEMPTS',            100);
 
 // Sync engine
 define('SYNC_MAX_BATCH_SIZE', 50);
@@ -33,6 +28,12 @@ define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5 MB
 define('ALLOWED_ORIGINS', [
     'https://airportvas.jrjapp.com',
 ]);
+
+define('STRIPE_SECRET_KEY',      'sk_test_51LsTYmSFDwAHdlKGGUYaaYlCV3b7k6LS3JwKuqDCvCo8JJAsGGyKMbBNXfR2HE7vgoJBL7zwqT3WmyjGRBUouqSx00jSWT6peF');
+define('STRIPE_SITE_KEY',      'pk_test_51LsTYmSFDwAHdlKGNPscWbW6q3TeEkPfK5UGvhWylUvUYtikJFk3K8T5hNwI2CPecJpmZ6WW35dvebLnUbnyAwyc00eaCVGGKI');
+define('STRIPE_WEBHOOK_SECRET',  'whsec_xxxxxxxxxxxxxxxxxx');
+define('STRIPE_CURRENCY',        'aed');
+define('PUBLIC_BASE_URL',        'https://airportvas.jrjapp.com');
 
 // Payment gateway
 define('PAYMENT_GATEWAY_URL',    getenv('PAYMENT_GATEWAY_URL')    ?: 'https://pay.example.com/checkout');

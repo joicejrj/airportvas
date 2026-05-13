@@ -2,798 +2,1394 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
-<title>Agent — Airport Parking Services</title>
-<link rel="manifest" href="/manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0ea5e9">
+<title>AirVAS — Agent</title>
+<link rel="manifest" href="/agent/manifest.json">
+<link rel="apple-touch-icon" href="/icons/agent-192.png">
+<meta name="apple-mobile-web-app-title" content="Agent">
+
+<!-- Daterangepicker dependencies -->
+<script src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
 <style>
-  :root {
-    --bg0: #0f172a;
-    --bg1: #1e293b;
-    --bg2: #334155;
-    --accent: #38bdf8;
-    --accent2: #0ea5e9;
-    --success: #22c55e;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --text1: #f1f5f9;
-    --text2: #94a3b8;
-    --text3: #64748b;
-    --border: rgba(148,163,184,0.15);
-    --radius: 12px;
-    --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg0); color: var(--text1); font-family: var(--font); min-height: 100dvh; }
+:root {
+  --bg: #f0f6ff;
+  --card: #ffffff;
+  --accent: #0ea5e9;
+  --accent2: #0284c7;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --text1: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --border: #e2e8f0;
+  --radius: 14px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text1);font-family:var(--font);min-height:100dvh;max-width:480px;margin:0 auto}
 
-  /* NAV */
-  .nav { background: var(--bg1); border-bottom: 1px solid var(--border); padding: 0 16px;
-         display: flex; align-items: center; justify-content: space-between; height: 56px;
-         position: sticky; top: 0; z-index: 100; }
-  .nav-logo { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-  .nav-logo span { color: var(--accent); }
-  .sync-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2);
-                background: var(--bg2); padding: 4px 10px; border-radius: 20px; cursor: pointer; }
-  .sync-badge.pending { color: var(--warning); }
-  .sync-badge.syncing { color: var(--accent); }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
-  .dot.offline { background: var(--danger); }
-  .dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+/* TOPBAR */
+.topbar{background:linear-gradient(135deg,#0ea5e9,#0284c7);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-logo{color:#fff;font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.topbar-agent{color:rgba(255,255,255,.85);font-size:12px;text-align:right;flex:1;margin:0 10px}
+.topbar-agent strong{display:block;color:#fff;font-size:13px}
+.logout-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer}
+.logout-btn:hover{background:rgba(255,255,255,.3)}
 
-  /* TABS */
-  .tabs { display: flex; background: var(--bg1); border-bottom: 1px solid var(--border); }
-  .tab { flex: 1; text-align: center; padding: 12px 4px; font-size: 13px; font-weight: 500;
-         color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent;
-         transition: all .2s; }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* MAIN CONTENT */
+.content{padding:20px 16px 100px}
 
-  /* MAIN CONTENT */
-  .view { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
-  .view.active { display: block; }
+/* SERVICE SELECT SCREEN */
+.welcome{text-align:center;padding:24px 0 8px}
+.welcome h2{font-size:22px;font-weight:800;color:var(--text1)}
+.welcome p{font-size:14px;color:var(--text2);margin-top:6px}
 
-  /* CARDS */
-  .card { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius);
-          padding: 16px; margin-bottom: 12px; }
-  .card-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase;
-                letter-spacing: .5px; margin-bottom: 14px; }
+.service-cards{display:flex;flex-direction:column;gap:14px;margin-top:24px}
+.svc-card{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:24px 20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:16px}
+.svc-card:hover,.svc-card:active{border-color:var(--accent);background:#f0f9ff;transform:scale(1.01)}
+.svc-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.svc-icon.wash{background:#e0f2fe}
+.svc-icon.porter{background:#f0fdf4}
+.svc-info h3{font-size:17px;font-weight:700}
+.svc-info p{font-size:13px;color:var(--text2);margin-top:3px}
+.svc-info .price{font-size:15px;font-weight:700;color:var(--accent);margin-top:6px}
+.svc-arrow{margin-left:auto;color:var(--text3);font-size:20px}
 
-  /* FORM ELEMENTS */
-  label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 5px; }
-  input, select, textarea {
-    width: 100%; background: var(--bg2); border: 1px solid var(--border);
-    color: var(--text1); padding: 11px 14px; border-radius: 9px; font-size: 15px;
-    font-family: var(--font); outline: none; transition: border-color .2s;
-  }
-  input:focus, select:focus { border-color: var(--accent); }
-  .form-row { margin-bottom: 12px; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* FORM SCREENS */
+.screen{display:none}
+.screen.active{display:block}
 
-  /* SERVICE SELECTOR */
-  .service-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .service-item {
-    background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px;
-    padding: 12px; cursor: pointer; transition: all .2s; position: relative;
-  }
-  .service-item.selected { border-color: var(--accent); background: rgba(56,189,248,.1); }
-  .service-item .svc-name { font-size: 14px; font-weight: 600; }
-  .service-item .svc-price { font-size: 13px; color: var(--accent); margin-top: 3px; }
-  .service-item .svc-check {
-    position: absolute; top: 8px; right: 8px; width: 20px; height: 20px;
-    border-radius: 50%; background: var(--accent); display: none;
-    align-items: center; justify-content: center;
-  }
-  .service-item.selected .svc-check { display: flex; }
-  .svc-check::after { content: '✓'; font-size: 11px; color: #fff; font-weight: 700; }
+.back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;padding:0 0 16px;margin-bottom:4px}
 
-  /* PAYMENT METHOD */
-  .pay-methods { display: flex; gap: 8px; }
-  .pay-method {
-    flex: 1; background: var(--bg2); border: 1.5px solid var(--border);
-    border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer;
-    transition: all .2s;
-  }
-  .pay-method.selected { border-color: var(--success); background: rgba(34,197,94,.1); }
-  .pay-method .pm-icon { font-size: 22px; }
-  .pay-method .pm-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:14px}
+.card-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.req{color:var(--danger);font-weight:800}
 
-  /* SUMMARY BAR */
-  .summary-bar {
-    background: var(--bg2); border-radius: 10px; padding: 12px 16px;
-    display: flex; justify-content: space-between; align-items: center; margin: 8px 0 16px;
-  }
-  .summary-bar .total { font-size: 22px; font-weight: 700; }
-  .summary-bar .count { font-size: 13px; color: var(--text2); }
+label{font-size:14px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500}
+input,select,textarea{width:100%;border:1.5px solid var(--border);background:var(--bg);color:var(--text1);padding:12px 14px;border-radius:10px;font-size:15px;font-family:var(--font);outline:none;transition:border-color .2s;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--accent);background:#fff}
+.form-row{margin-bottom:14px}
 
-  /* BUTTONS */
-  .btn {
-    width: 100%; padding: 14px; border-radius: 12px; border: none;
-    font-size: 16px; font-weight: 600; font-family: var(--font);
-    cursor: pointer; transition: all .2s; margin-top: 8px;
-  }
-  .btn-primary { background: var(--accent); color: #0f172a; }
-  .btn-primary:hover { background: var(--accent2); }
-  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-secondary { background: var(--bg2); color: var(--text1); border: 1px solid var(--border); }
-  .btn-danger { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid var(--danger); }
+/* IMAGE UPLOAD */
+.img-upload{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg)}
+.img-upload:hover{border-color:var(--accent);background:#f0f9ff}
+.img-upload.has-image{border-style:solid;border-color:var(--success);padding:8px}
+.img-upload.error{border-color:var(--danger);background:#fef2f2}
+.img-upload img{width:100%;border-radius:8px;max-height:220px;object-fit:cover}
+.img-upload-text{color:var(--text3);font-size:14px;margin-top:8px}
+.img-upload-icon{font-size:36px}
 
-  /* ORDER LIST */
-  .order-item {
-    background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 14px; margin-bottom: 10px; cursor: pointer;
-  }
-  .order-header { display: flex; justify-content: space-between; align-items: flex-start; }
-  .order-plate { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
-  .order-meta { font-size: 12px; color: var(--text2); margin-top: 3px; }
-  .badge {
-    padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;
-  }
-  .badge-unpaid  { background: rgba(239,68,68,.2);  color: var(--danger); }
-  .badge-partial { background: rgba(245,158,11,.2); color: var(--warning); }
-  .badge-paid    { background: rgba(34,197,94,.2);  color: var(--success); }
-  .order-services { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-  .svc-tag { background: var(--bg2); color: var(--text2); padding: 3px 8px; border-radius: 6px; font-size: 11px; }
+/* PAYMENT */
+.payment-opts{display:flex;flex-direction:column;gap:10px}
+.pay-opt{display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .15s;background:var(--card)}
+.pay-opt.selected{border-color:var(--accent);background:#f0f9ff}
+.pay-opt-icon{font-size:22px;width:36px;text-align:center}
+.pay-opt-label{font-size:15px;font-weight:600}
+.pay-opt-sub{font-size:12px;color:var(--text3)}
+.pay-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);margin-left:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;transition:all .15s}
+.pay-opt.selected .pay-radio{border-color:var(--accent);background:var(--accent)}
+.pay-opt.selected .pay-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
 
-  /* OFFLINE BANNER */
-  .offline-banner {
-    background: rgba(245,158,11,.15); border: 1px solid var(--warning);
-    color: var(--warning); padding: 10px 16px; text-align: center; font-size: 13px;
-    display: none;
-  }
-  .offline-banner.show { display: block; }
+.amount-display{text-align:center;padding:20px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:12px;margin-bottom:16px;border:1px solid #bae6fd}
+.amount-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.amount-value{font-size:36px;font-weight:800;color:var(--accent);margin-top:4px}
 
-  /* QUEUE STATUS */
-  .queue-panel { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-  .queue-item { display: flex; align-items: center; gap: 10px; padding: 8px 0;
-                border-bottom: 1px solid var(--border); font-size: 13px; }
-  .queue-item:last-child { border-bottom: none; }
-  .qi-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .qi-status.pending  { background: var(--warning); }
-  .qi-status.success  { background: var(--success); }
-  .qi-status.failed   { background: var(--danger); }
-  .qi-status.conflict { background: #a855f7; }
-  .qi-info { flex: 1; }
-  .qi-type { font-weight: 500; }
-  .qi-time { color: var(--text3); font-size: 11px; }
+/* STRIPE LINK BOX */
+.stripe-box{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px}
+.stripe-url{font-size:12px;word-break:break-all;color:var(--accent2);background:#e0f2fe;padding:10px 12px;border-radius:8px;margin:8px 0;font-family:monospace;white-space:pre-wrap}
+.copy-btn{background:var(--accent);border:none;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;width:100%}
 
-  /* MODAL */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.7);
-    display: none; align-items: flex-end; z-index: 200;
-  }
-  .modal-overlay.show { display: flex; }
-  .modal {
-    background: var(--bg1); border-radius: 20px 20px 0 0; padding: 24px 16px;
-    width: 100%; max-height: 85dvh; overflow-y: auto;
-  }
-  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
-  .modal-close { float: right; background: var(--bg2); border: none; color: var(--text2);
-                 width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+/* MAIN BTN */
+.main-btn{width:100%;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:6px}
+.main-btn:disabled{opacity:.5;cursor:not-allowed}
+.main-btn.success{background:linear-gradient(135deg,#16a34a,#15803d)}
+.main-btn.outline{background:#fff;color:var(--accent);border:2px solid var(--accent)}
 
-  /* STEP INDICATOR */
-  .steps { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
-  .step { flex: 1; height: 3px; background: var(--bg2); border-radius: 2px; transition: background .3s; }
-  .step.active { background: var(--accent); }
-  .step.done   { background: var(--success); }
+/* SUCCESS SCREEN */
+.success-screen{text-align:center;padding:40px 20px}
+.success-icon{font-size:64px;margin-bottom:16px}
+.success-title{font-size:22px;font-weight:800;color:var(--success)}
+.success-sub{font-size:14px;color:var(--text2);margin-top:8px;line-height:1.6}
+.order-id-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin:20px 0;font-family:monospace;font-size:13px;color:var(--text2)}
+.order-id-box strong{display:block;font-size:18px;color:var(--text1);margin-top:4px}
+
+/* ORDERS LIST */
+.order-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.order-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.order-plate{font-size:16px;font-weight:800;letter-spacing:1px}
+.order-type{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px}
+.order-type.wash{background:#e0f2fe;color:#0284c7}
+.order-type.porter{background:#f0fdf4;color:#16a34a}
+.order-customer{font-size:13px;color:var(--text2);margin-top:4px}
+.order-meta{font-size:12px;color:var(--text3);display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.status-badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;text-transform:uppercase}
+.status-badge.pending{background:#fef9c3;color:#854d0e}
+.status-badge.assigned{background:#e0f2fe;color:#0284c7}
+.status-badge.accepted{background:#dbeafe;color:#1d4ed8}
+.status-badge.in_progress{background:#ede9fe;color:#7c3aed}
+.status-badge.completed{background:#dcfce7;color:#166534}
+.status-badge.cancelled{background:#fee2e2;color:#991b1b}
+.status-badge.rejected{background:#fee2e2;color:#991b1b}
+.status-badge.unpaid{background:#fee2e2;color:#991b1b}
+.status-badge.paid{background:#dcfce7;color:#166534}
+.status-badge.partial{background:#fef3c7;color:#92400e}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -4px 12px rgba(0,0,0,.06)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 6px;cursor:pointer;color:var(--text3);transition:color .15s;border:none;background:none;font-family:var(--font)}
+.nav-btn.active{color:var(--accent)}
+.nav-btn .nav-icon{font-size:22px}
+.nav-btn .nav-label{font-size:10px;font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+/* LOGIN */
+#loginScreen{display:flex;position:fixed;inset:0;background:linear-gradient(135deg,#0ea5e9,#0284c7);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .mark{font-size:26px;font-weight:800;color:var(--accent)}
+.login-logo .sub{font-size:12px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:1.5px}
+.login-input{width:100%;border:1.5px solid var(--border);background:#f8fafc;color:var(--text1);padding:13px 14px;border-radius:10px;font-size:15px;outline:none;margin-bottom:12px;font-family:var(--font)}
+.login-input:focus{border-color:var(--accent);background:#fff}
+.login-error{color:var(--danger);font-size:13px;min-height:20px;margin-bottom:8px;text-align:center}
+.login-btn{width:100%;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer}
+.login-btn:disabled{opacity:.6;cursor:not-allowed}
+
+/* TOAST */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:9999;display:none;max-width:90%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+
+/* TIME BADGE */
+.time-badge{display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;margin-top:8px}
+
+/* SEGMENTED CONTROL */
+.seg-control {
+  display: flex;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+.seg-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--font);
+}
+.seg-btn:active { transform: scale(0.97); }
+.seg-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(14,165,233,0.3);
+}
+.seg-btn .seg-icon { font-size: 14px; }
+.seg-btn .seg-count {
+  background: var(--danger); color: #fff;
+  font-size: 10px; font-weight: 800;
+  padding: 1px 6px; border-radius: 999px;
+  min-width: 18px; text-align: center; line-height: 1.4;
+}
+.seg-btn.active .seg-count { background: rgba(255,255,255,0.3); }
+
+/* DATERANGE WRAPPER */
+.daterange-wrap{display:flex;gap:8px;margin-bottom:14px;align-items:stretch}
+.daterange-input{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text1);font-family:var(--font);outline:none;cursor:pointer;min-height:42px;display:flex;align-items:center;gap:8px}
+.daterange-input:hover{border-color:var(--accent)}
+.daterange-input .icon{color:var(--accent);font-size:14px}
+.daterange-input .text{flex:1}
+.daterange-clear-btn{padding:10px 14px;border:1.5px solid var(--border);background:#fff;color:var(--text2);border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);min-height:42px;white-space:nowrap}
+.daterange-clear-btn:active{background:var(--bg)}
+
+/* daterangepicker overrides to fit theme */
+.daterangepicker .ranges li.active{background-color:var(--accent)}
+.daterangepicker td.active,.daterangepicker td.active:hover{background-color:var(--accent)}
+.daterangepicker .drp-buttons .btn{font-family:var(--font)}
+.daterangepicker .applyBtn{background-color:var(--accent);border-color:var(--accent)}
+.daterangepicker .applyBtn:hover{background-color:var(--accent2);border-color:var(--accent2)}
+
+.icon-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+/* Pagination footer */
+.load-more-footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--text3);
+  font-size: 12px;
+}
+.load-more-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: lm-spin 0.8s linear infinite;
+  margin-bottom: 8px;
+}
+@keyframes lm-spin { to { transform: rotate(360deg); } }
+.load-end {
+  text-align: center;
+  padding: 20px;
+  color: var(--text3);
+  font-size: 12px;
+  font-style: italic;
+}
+	
+.order-provider {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+#photoModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.9);
+  z-index: 9998;
+  align-items: center;
+  justify-content: center;
+}
+#photoModal.open { display: flex; }
+#photoModal img {
+  max-width: 95vw;
+  max-height: 90vh;
+  border-radius: 12px;
+}
+#photoModal .close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  background: rgba(0,0,0,.5);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.photo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e0f2fe;
+  color: var(--accent2);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s;
+  margin-left: auto;
+}
+.photo-btn:active { background: #bae6fd; }
 </style>
 </head>
 <body>
 
-<!-- OFFLINE BANNER -->
-<div class="offline-banner" id="offlineBanner">
-  ⚡ Offline mode — actions will sync when connection restores
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="mark">✈ AirVAS</div>
+      <div class="sub">Agent Portal</div>
+    </div>
+    <input id="agentEmail" class="login-input" type="email" placeholder="Email address" autocomplete="email"
+      onkeydown="if(event.key==='Enter')document.getElementById('agentPass').focus()">
+    <input id="agentPass" class="login-input" type="password" placeholder="Password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="agentLoginError" class="login-error"></div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+  </div>
 </div>
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-logo">Sky<span>Valet</span></div>
-  <div class="sync-badge" id="syncBadge" onclick="showQueuePanel()">
-    <div class="dot" id="connDot"></div>
-    <span id="syncLabel">Connected</span>
-  </div>
-</nav>
+<!-- APP -->
+<div id="appShell" style="display:none">
 
-<!-- TABS -->
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('new-order')">New Order</div>
-  <div class="tab" onclick="switchTab('orders')">Orders</div>
-  <div class="tab" onclick="switchTab('reports')">Reports</div>
-</div>
-
-<!-- ════════════════════════════════════════════════════
-     VIEW: NEW ORDER (3-step wizard)
-═════════════════════════════════════════════════════ -->
-<div class="view active" id="view-new-order">
-
-  <!-- Step indicator -->
-  <div class="steps" style="margin-top:16px;">
-    <div class="step active" id="step-1"></div>
-    <div class="step" id="step-2"></div>
-    <div class="step" id="step-3"></div>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">✈ AirVAS</div>
+    <div class="topbar-agent">
+      <strong id="agentNameDisplay">Agent</strong>
+      <span id="agentRoleDisplay">Agent</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
   </div>
 
-  <!-- STEP 1: Vehicle + Services -->
-  <div id="wizard-step-1">
-    <div class="card">
-      <div class="card-title">Vehicle Details</div>
-      <div class="form-row">
-        <label>Number Plate *</label>
-        <input type="text" id="plate" placeholder="AB12 CDE" style="font-size:20px;font-weight:700;text-transform:uppercase;" maxlength="10">
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ═══ SCREEN: NEW ORDER ═══ -->
+    <div id="screen-new" class="screen active">
+      <div class="welcome">
+        <h2>New Service</h2>
+        <p>Select the service for this customer</p>
       </div>
-      <div class="form-grid">
+      <div class="service-cards">
+
+        <div class="svc-card" onclick="selectService('wash')">
+          <div class="svc-icon wash">🚗</div>
+          <div class="svc-info">
+            <h3>Car Wash</h3>
+            <p>Exterior wash while customer travels</p>
+            <div class="price">AED <span id="washPrice">—</span></div>
+          </div>
+          <div class="svc-arrow">›</div>
+        </div>
+
+        <div class="svc-card" onclick="selectService('porter')">
+          <div class="svc-icon porter">🧳</div>
+          <div class="svc-info">
+            <h3>Porter Service</h3>
+            <p>Luggage assistance for the traveler</p>
+            <div class="price">AED <span id="porterPrice">—</span></div>
+          </div>
+          <div class="svc-arrow">›</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ SCREEN: CAR WASH DETAILS ═══ -->
+    <div id="screen-wash" class="screen">
+      <button class="back-btn" onclick="goBack('screen-new')">‹ Back</button>
+
+      <div class="card">
+        <div class="card-title">🚗 Car Wash</div>
+        <div class="time-badge">⏱ Est. 45–60 min while you travel</div>
+        <div style="margin-top:14px;font-size:13px;color:var(--text2);line-height:1.6">
+          Your car will be washed and ready when you return. Our team will locate your vehicle using the photo and bay details below.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Vehicle Number</div>
         <div class="form-row">
-          <label>Make</label>
-          <input type="text" id="make" placeholder="Toyota">
+          <label>Plate Number <span class="req">*</span></label>
+          <input id="washPlate" type="text" placeholder="e.g. A 12345" style="text-transform:uppercase;font-size:18px;font-weight:700;letter-spacing:2px">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Customer Contact (Optional)</div>
+        <div class="form-row">
+          <label>Customer Name</label>
+          <input id="washCustomerName" type="text" placeholder="e.g. Mr. Ahmed">
         </div>
         <div class="form-row">
-          <label>Model</label>
-          <input type="text" id="model" placeholder="Camry">
+          <label>Customer Phone</label>
+          <input id="washCustomerPhone" type="tel" placeholder="e.g. +971 50 123 4567" autocomplete="tel">
         </div>
       </div>
-      <div class="form-row">
-        <label>Customer Phone</label>
-        <input type="tel" id="phone" placeholder="+44 7700 000000">
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">Select Services</div>
-      <div class="service-grid" id="serviceGrid">
-        <!-- Populated from catalogue -->
-      </div>
-    </div>
-
-    <div class="summary-bar" id="summaryBar" style="display:none;">
-      <div>
-        <div class="total" id="totalAmount">£0.00</div>
-        <div class="count" id="svcCount">0 services selected</div>
-      </div>
-      <button class="btn btn-primary" style="width:auto;padding:12px 24px;" onclick="goToStep(2)">
-        Next →
-      </button>
-    </div>
-  </div>
-
-  <!-- STEP 2: Location -->
-  <div id="wizard-step-2" style="display:none;">
-    <div class="card">
-      <div class="card-title">Parking Location</div>
-      <div class="form-row">
-        <label>Location / Bay</label>
-        <select id="locationSelect">
-          <option value="">Select parking location…</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>Bay / Space Details</label>
-        <input type="text" id="locationDetail" placeholder="e.g. Level 2, Bay B-14">
-      </div>
-      <div class="form-row">
-        <label>Notes (optional)</label>
-        <textarea id="notes" placeholder="Any special instructions…" rows="2"
-                  style="resize:none;"></textarea>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-secondary" style="margin-top:0;" onclick="goToStep(1)">← Back</button>
-      <button class="btn btn-primary" style="margin-top:0;" onclick="goToStep(3)">Next →</button>
-    </div>
-  </div>
-
-  <!-- STEP 3: Payment -->
-  <div id="wizard-step-3" style="display:none;">
-    <div class="card">
-      <div class="card-title">Payment</div>
-      <div class="pay-methods">
-        <div class="pay-method selected" id="pm-cash" onclick="selectPayment('cash')">
-          <div class="pm-icon">💵</div>
-          <div class="pm-label">Cash</div>
+      <div class="card">
+        <div class="card-title">Car Photo + Location <span class="req">*</span></div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px">
+          Take a photo of the car that clearly shows the parking location sign/board. This is required so the provider can find the vehicle.
         </div>
-        <div class="pay-method" id="pm-card" onclick="selectPayment('card')">
-          <div class="pm-icon">💳</div>
-          <div class="pm-label">Card</div>
+        <div class="img-upload" id="washImgBox" onclick="document.getElementById('washImgInput').click()">
+          <div class="img-upload-icon">📸</div>
+          <div class="img-upload-text">Tap to take photo</div>
         </div>
-        <div class="pay-method" id="pm-online" onclick="selectPayment('online')">
-          <div class="pm-icon">📱</div>
-          <div class="pm-label">Online</div>
+        <input id="washImgInput" type="file" accept="image/*" capture="environment" style="display:none" onchange="previewImage(this,'washImgBox','washImgData')">
+        <input id="washImgData" type="hidden">
+      </div>
+
+      <div class="card">
+        <div class="card-title">Parking Location (Optional)</div>
+        <div class="form-row">
+          <label>Floor</label>
+          <input id="washFloor" type="text" placeholder="e.g. P2, Ground, Level 3">
+        </div>
+        <div class="form-row">
+          <label>Zone</label>
+          <input id="washZone" type="text" placeholder="e.g. Zone A, Red Zone">
+        </div>
+        <div class="form-row">
+          <label>Bay Number</label>
+          <input id="washBay" type="text" placeholder="e.g. 45, B-12">
         </div>
       </div>
-      <div style="margin-top:16px;">
-        <label>Amount Received</label>
-        <input type="number" id="amountReceived" step="0.01" placeholder="0.00" style="font-size:22px;">
-      </div>
-      <div id="changeRow" style="display:none;margin-top:8px;">
-        <div style="background:rgba(34,197,94,.1);border:1px solid var(--success);border-radius:8px;padding:10px 14px;">
-          Change: <strong id="changeAmount" style="color:var(--success);font-size:18px;">£0.00</strong>
+
+      <button class="main-btn" onclick="proceedToPayment('wash')">Continue to Payment →</button>
+    </div>
+
+    <!-- ═══ SCREEN: PORTER DETAILS ═══ -->
+    <div id="screen-porter" class="screen">
+      <button class="back-btn" onclick="goBack('screen-new')">‹ Back</button>
+
+      <div class="card">
+        <div class="card-title">🧳 Porter Service</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6">
+          You will personally assist the customer with their luggage. Service is completed once the customer is dropped off at the terminal.
         </div>
       </div>
+
+      <div class="card">
+        <div class="card-title">Customer Contact (Optional)</div>
+        <div class="form-row">
+          <label>Customer Name</label>
+          <input id="porterName" type="text" placeholder="e.g. Mr. Ahmed">
+        </div>
+        <div class="form-row">
+          <label>Customer Phone</label>
+          <input id="porterPhone" type="tel" placeholder="e.g. +971 50 123 4567" autocomplete="tel">
+        </div>
+        <div class="form-row">
+          <label>Terminal / Gate</label>
+          <input id="porterTerminal" type="text" placeholder="e.g. Terminal 1, Gate 5">
+        </div>
+      </div>
+
+      <button class="main-btn" onclick="proceedToPayment('porter')">Continue to Payment →</button>
     </div>
 
-    <div class="card" style="padding:14px 16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="color:var(--text2);font-size:14px;">Order Total</span>
-        <span style="font-size:18px;font-weight:700;" id="reviewTotal">£0.00</span>
+    <!-- ═══ SCREEN: PAYMENT ═══ -->
+    <div id="screen-payment" class="screen">
+      <button class="back-btn" id="payBackBtn" onclick="goBack('')">‹ Back</button>
+
+      <div class="amount-display">
+        <div class="amount-label">Amount Due</div>
+        <div class="amount-value">AED <span id="payAmount">0</span></div>
       </div>
-      <div id="reviewServices"></div>
+
+      <div class="card">
+        <div class="card-title">Payment Method</div>
+        <div class="payment-opts">
+          <div class="pay-opt selected" data-method="cash" onclick="selectPayment('cash')">
+            <div class="pay-opt-icon">💵</div>
+            <div>
+              <div class="pay-opt-label">Cash</div>
+              <div class="pay-opt-sub">Collect from customer now</div>
+            </div>
+            <div class="pay-radio"></div>
+          </div>
+          <div class="pay-opt" data-method="card" onclick="selectPayment('card')">
+            <div class="pay-opt-icon">💳</div>
+            <div>
+              <div class="pay-opt-label">Card / POS</div>
+              <div class="pay-opt-sub">Swipe on terminal</div>
+            </div>
+            <div class="pay-radio"></div>
+          </div>
+          <div class="pay-opt" data-method="link" onclick="selectPayment('link')">
+            <div class="pay-opt-icon">🔗</div>
+            <div>
+              <div class="pay-opt-label">Payment Link</div>
+              <div class="pay-opt-sub">Send to customer via WhatsApp/SMS</div>
+            </div>
+            <div class="pay-radio"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment link box -->
+      <div id="linkBox" class="stripe-box" style="display:none">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">🔗 Payment Link</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Share this link with the customer. Order confirms automatically once paid.</div>
+        <div class="stripe-url" id="stripeUrl">Generating…</div>
+        <button class="copy-btn" onclick="copyLink()">📋 Copy Link</button>
+        <button class="main-btn" style="margin-top:12px" onclick="finishLinkFlow()">
+          Done — link shared with customer
+        </button>
+      </div>
+
+      <!-- Cash/Card confirm button -->
+      <div id="cashCardConfirm">
+        <div class="form-row" style="margin-top:4px">
+          <label>Reference / Receipt No. (optional)</label>
+          <input id="payRef" type="text" placeholder="e.g. TXN123456">
+        </div>
+        <button class="main-btn" id="confirmPayBtn" onclick="confirmPayment()">✓ Confirm Payment &amp; Create Order</button>
+      </div>
     </div>
 
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-secondary" style="margin-top:0;" onclick="goToStep(2)">← Back</button>
-      <button class="btn btn-primary" style="margin-top:0;flex:2;" id="submitBtn"
-              onclick="submitOrder()">Create Order & Assign</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════
-     VIEW: ORDERS LIST
-═════════════════════════════════════════════════════ -->
-<div class="view" id="view-orders">
-  <div style="display:flex;gap:8px;margin-bottom:12px;margin-top:4px;">
-    <input type="text" id="orderSearch" placeholder="Search plate or customer…" oninput="filterOrders()">
-    <select id="statusFilter" style="width:130px;" onchange="filterOrders()">
-      <option value="">All</option>
-      <option value="unpaid">Unpaid</option>
-      <option value="partial">Partial</option>
-      <option value="paid">Paid</option>
-    </select>
-  </div>
-  <div id="ordersList"></div>
-</div>
-
-<!-- ════════════════════════════════════════════════════
-     VIEW: REPORTS
-═════════════════════════════════════════════════════ -->
-<div class="view" id="view-reports">
-  <div class="card">
-    <div class="card-title">Today's Summary</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="reportGrid">
-      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
-        <div style="font-size:12px;color:var(--text2);">Orders</div>
-        <div style="font-size:28px;font-weight:700;margin-top:4px;" id="rOrders">—</div>
-      </div>
-      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
-        <div style="font-size:12px;color:var(--text2);">Revenue</div>
-        <div style="font-size:28px;font-weight:700;margin-top:4px;color:var(--success);" id="rRevenue">—</div>
-      </div>
-      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
-        <div style="font-size:12px;color:var(--text2);">Cash</div>
-        <div style="font-size:22px;font-weight:600;margin-top:4px;" id="rCash">—</div>
-      </div>
-      <div style="background:var(--bg2);border-radius:10px;padding:14px;">
-        <div style="font-size:12px;color:var(--text2);">Card / Online</div>
-        <div style="font-size:22px;font-weight:600;margin-top:4px;" id="rCard">—</div>
+    <!-- ═══ SCREEN: SUCCESS ═══ -->
+    <div id="screen-success" class="screen">
+      <div class="success-screen">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Order Created!</div>
+        <div class="success-sub" id="successMsg">Service order has been created and providers have been notified.</div>
+        <div class="order-id-box">
+          Order ID<strong id="successOrderId">—</strong>
+        </div>
+        <div id="successWashNote" style="display:none;background:#fef3c7;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#92400e;line-height:1.6">
+          ⏱ Car wash will be completed within <strong>45–60 minutes</strong>. Provider has been notified and will start soon.
+        </div>
+        <button class="main-btn" onclick="resetToNew()">+ New Service</button>
+        <button class="main-btn outline" style="margin-top:10px" onclick="switchTab('orders')">View All Orders</button>
       </div>
     </div>
-  </div>
-  <div class="card" id="serviceBreakdown"></div>
+
+    <!-- ═══ SCREEN: ORDERS ═══ -->
+    <div id="screen-orders" class="screen">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h2 style="font-size:18px;font-weight:800">My Orders</h2>
+        <button class="icon-btn" onclick="refreshOrders()" title="Refresh">↻</button>
+      </div>
+
+      <!-- Segmented status filter with live counts -->
+      <div class="seg-control" id="agentSegFilter">
+        <button class="seg-btn active" data-val="active" onclick="setAgentFilter('active')">
+          <span class="seg-icon">⚡</span>
+          <span>Active</span>
+          <span class="seg-count" id="segCountActive" style="display:none">0</span>
+        </button>
+        <button class="seg-btn" data-val="completed" onclick="setAgentFilter('completed')">
+          <span class="seg-icon">✓</span>
+          <span>Completed</span>
+          <span class="seg-count" id="segCountCompleted" style="display:none">0</span>
+        </button>
+      </div>
+
+      <!-- Daterange picker -->
+      <div class="daterange-wrap">
+        <div class="daterange-input" id="agentDateRange">
+          <span class="icon">📅</span>
+          <span class="text" id="agentDateLabel">All time</span>
+          <span style="color:var(--text3)">▼</span>
+        </div>
+        <button class="daterange-clear-btn" onclick="clearAgentRange()">Reset</button>
+      </div>
+
+      <div id="ordersList">
+        <div style="text-align:center;padding:40px;color:var(--text3)">Loading…</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-new" onclick="switchTab('new')">
+      <span class="nav-icon">➕</span>
+      <span class="nav-label">New</span>
+    </button>
+    <button class="nav-btn" id="nav-orders" onclick="switchTab('orders')">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Orders</span>
+    </button>
+  </nav>
+
+</div><!-- /appShell -->
+
+<div id="photoModal" onclick="closePhoto()">
+  <button class="close" onclick="event.stopPropagation();closePhoto()">✕</button>
+  <img id="photoModalImg" src="" alt="Vehicle photo">
 </div>
+	
+<div id="toast"></div>
 
-<!-- QUEUE PANEL MODAL -->
-<div class="modal-overlay" id="queueModal" onclick="hideQueuePanel()">
-  <div class="modal" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="hideQueuePanel()">×</button>
-    <div class="modal-title">Sync Queue</div>
-    <div id="queueList"><div style="color:var(--text3);text-align:center;padding:20px;">Empty</div></div>
-  </div>
-</div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const API = location.origin + '/api';
+let TOKEN = localStorage.getItem('ap_agent_token') || '';
+let currentAgent = null;
+let currentService = null;
+let selectedPayMethod = 'cash';
+let services = {};
+let generatedOrderId = null;
+let stripePaymentLink = null;
+let currentTab = 'new';
 
-<!-- SUCCESS MODAL -->
-<div class="modal-overlay" id="successModal">
-  <div class="modal" style="text-align:center;">
-    <div style="font-size:52px;margin-bottom:12px;">✅</div>
-    <div style="font-size:22px;font-weight:700;margin-bottom:8px;">Order Created!</div>
-    <div style="color:var(--text2);margin-bottom:20px;" id="successDetail">Syncing with server…</div>
-    <button class="btn btn-primary" onclick="newOrder()">New Order</button>
-  </div>
-</div>
-
-<script type="module">
-import { initSync, queueOrderCreate, queuePayment, syncQueue, uuidv4 }
-  from '/pwa/sync-engine.js';
-import { getCatalogue, dbGetAll, dbPut } from '/pwa/indexeddb/db.js';
-
-// ── STATE ─────────────────────────────────────────────────────────────────
-let state = {
-  services: [],
-  locations: [],
-  selectedServices: [],
-  paymentMethod: 'cash',
-  currentStep: 1,
-  orders: [],
+// Pagination state per filter
+const _pagination = {
+  active:    { page: 1, hasMore: true, loading: false, items: [] },
+  completed: { page: 1, hasMore: true, loading: false, items: [] },
 };
+const PAGE_SIZE = 20;
 
-// ── BOOT ──────────────────────────────────────────────────────────────────
-async function boot() {
-  await initSync();
-  await loadCatalogue();
-  await loadOrders();
-  loadReport();
-  setupNetworkListener();
-  setupSyncListener();
+// Stale-load guard
+let _loadGen = 0;
+
+// Date range state
+let _agentFilter = 'active';
+let _agentFrom = null;
+let _agentTo   = null;
+
+// Service worker cleanup
+if ('serviceWorker' in navigator) {
+  // 1) Unregister stale service workers not scoped to /agent/
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => {
+      if (!r.scope.includes('/agent/')) r.unregister();
+    });
+  }).catch(() => {});
+
+  // 2) Register the agent service worker
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/agent/sw.js', { scope: '/agent/' })
+      .then(reg => console.log('[Agent SW] registered, scope:', reg.scope))
+      .catch(err => console.warn('[Agent SW] registration failed:', err));
+  });
 }
 
-async function loadCatalogue() {
-  let services = await getCatalogue();
+// ── AUTH ──────────────────────────────────────────────────────
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN };
+}
 
-  if (services.length === 0 && navigator.onLine) {
-    try {
-      const r = await fetch('/api/services');
-      const d = await r.json();
-      services = d.data ?? [];
-    } catch {}
-  }
-
-  state.services = services;
-  renderServiceGrid();
-
-  // Load locations
+async function apiFetch(path, opts = {}) {
+  opts.headers = Object.assign({}, opts.headers || {}, authHeaders());
   try {
-    const r = await fetch('/api/locations');
-    const d = await r.json();
-    state.locations = d.data ?? [];
-    renderLocations();
-  } catch {}
+    const res = await fetch(API + path, opts);
+    if (res.status === 401) { doLogout(); return null; }
+    return await res.json().catch(() => ({}));
+  } catch(e) { showToast('Network error'); return null; }
 }
 
-function renderServiceGrid() {
-  const grid = document.getElementById('serviceGrid');
-  grid.innerHTML = state.services.map(s => `
-    <div class="service-item" id="svc-${s.id}" onclick="toggleService('${s.id}')">
-      <div class="svc-check"></div>
-      <div class="svc-name">${s.name}</div>
-      <div class="svc-price">£${parseFloat(s.price || s.base_price || 0).toFixed(2)}</div>
-    </div>
-  `).join('');
-}
-
-function renderLocations() {
-  const sel = document.getElementById('locationSelect');
-  state.locations.forEach(l => {
-    const opt = document.createElement('option');
-    opt.value = l.id;
-    opt.textContent = `${l.name} (${l.zone})`;
-    sel.appendChild(opt);
-  });
-}
-
-// ── SERVICE SELECTION ─────────────────────────────────────────────────────
-window.toggleService = (id) => {
-  const idx = state.selectedServices.findIndex(s => s.service_id === id);
-  if (idx > -1) {
-    state.selectedServices.splice(idx, 1);
-    document.getElementById(`svc-${id}`)?.classList.remove('selected');
-  } else {
-    const svc = state.services.find(s => s.id === id);
-    if (!svc) return;
-    state.selectedServices.push({ service_id: id, price: parseFloat(svc.price || svc.base_price || 0) });
-    document.getElementById(`svc-${id}`)?.classList.add('selected');
-  }
-  updateSummary();
-};
-
-function updateSummary() {
-  const total = state.selectedServices.reduce((s, i) => s + i.price, 0);
-  const bar   = document.getElementById('summaryBar');
-  bar.style.display = state.selectedServices.length > 0 ? 'flex' : 'none';
-  document.getElementById('totalAmount').textContent = `£${total.toFixed(2)}`;
-  document.getElementById('svcCount').textContent =
-    `${state.selectedServices.length} service${state.selectedServices.length !== 1 ? 's' : ''} selected`;
-  // Keep review total updated
-  document.getElementById('reviewTotal').textContent = `£${total.toFixed(2)}`;
-  document.getElementById('amountReceived').value = total.toFixed(2);
-  renderReviewServices();
-}
-
-function renderReviewServices() {
-  const container = document.getElementById('reviewServices');
-  container.innerHTML = state.selectedServices.map(s => {
-    const svc = state.services.find(sv => sv.id === s.service_id);
-    return `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);padding:4px 0;">
-      <span>${svc?.name ?? s.service_id}</span>
-      <span>£${s.price.toFixed(2)}</span>
-    </div>`;
-  }).join('');
-}
-
-// ── WIZARD STEPS ──────────────────────────────────────────────────────────
-window.goToStep = (n) => {
-  if (n === 2 && state.selectedServices.length === 0) {
-    alert('Please select at least one service.');
+async function checkAuth() {
+  if (!TOKEN) { showLoginScreen(); return; }
+  const res = await apiFetch('/auth/me');
+  if (!res?.data) { showLoginScreen(); return; }
+  if (res.data.role !== 'agent' && res.data.role !== 'admin') {
+    localStorage.removeItem('ap_agent_token'); TOKEN = '';
+    showLoginScreen();
+    document.getElementById('agentLoginError').textContent =
+      'This account is a ' + res.data.role + '. Use the ' + res.data.role + ' portal.';
     return;
   }
-  if (n === 2 && !document.getElementById('plate').value.trim()) {
-    alert('Please enter the vehicle number plate.');
+  currentAgent = res.data;
+  document.getElementById('agentNameDisplay').textContent = currentAgent.name;
+  document.getElementById('agentRoleDisplay').textContent = (currentAgent.role || 'agent').charAt(0).toUpperCase() + (currentAgent.role || 'agent').slice(1);
+  showApp();
+  loadServicePrices();
+  initDateRangePicker();
+}
+
+function showLoginScreen() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+}
+
+async function doLogin() {
+  const email = document.getElementById('agentEmail').value.trim();
+  const pass  = document.getElementById('agentPass').value;
+  const err   = document.getElementById('agentLoginError');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = 'Enter email and password'; return; }
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  try {
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const json = await res.json();
+    if (json.token) {
+      if (json.user && json.user.role !== 'agent' && json.user.role !== 'admin') {
+        err.textContent = 'This account is a ' + json.user.role + '. Use the ' + json.user.role + ' portal.';
+        btn.textContent = 'Sign In'; btn.disabled = false; return;
+      }
+      TOKEN = json.token;
+      localStorage.setItem('ap_agent_token', TOKEN);
+      currentAgent = json.user;
+      document.getElementById('agentNameDisplay').textContent = currentAgent.name;
+      document.getElementById('agentRoleDisplay').textContent = (currentAgent.role || 'agent').charAt(0).toUpperCase() + (currentAgent.role || 'agent').slice(1);
+      showApp();
+      loadServicePrices();
+      initDateRangePicker();
+    } else {
+      err.textContent = json.message || 'Invalid email or password';
+      btn.textContent = 'Sign In'; btn.disabled = false;
+    }
+  } catch(e) {
+    err.textContent = 'Connection error';
+    btn.textContent = 'Sign In'; btn.disabled = false;
+  }
+}
+
+function doLogout() {
+  if (TOKEN) {
+    fetch(API + '/auth/logout', { method: 'POST', headers: authHeaders() }).catch(()=>{});
+  }
+  localStorage.removeItem('ap_agent_token');
+  TOKEN = '';
+  location.reload();
+}
+
+// ── SERVICE PRICES ────────────────────────────────────────────
+async function loadServicePrices() {
+  const res = await apiFetch('/services');
+  if (!res?.data) return;
+  res.data.forEach(s => {
+    const name = (s.name || '').toLowerCase();
+    const price = parseFloat(s.price || s.base_price || 0).toFixed(2);
+    if (name.includes('wash')) {
+      services.wash = s;
+      document.getElementById('washPrice').textContent = price;
+    } else if (name.includes('porter')) {
+      services.porter = s;
+      document.getElementById('porterPrice').textContent = price;
+    }
+  });
+  if (!services.wash)   document.getElementById('washPrice').textContent   = '—';
+  if (!services.porter) document.getElementById('porterPrice').textContent = '—';
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + tab).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (tab === 'new')    { showScreen('screen-new'); }
+  if (tab === 'orders') { showScreen('screen-orders'); loadOrders(); }
+}
+
+function goBack(screenId) {
+  showScreen(screenId || 'screen-new');
+}
+
+function selectService(type) {
+  if (!services[type]) {
+    showToast('Service not configured. Ask admin to add it.');
     return;
   }
-  state.currentStep = n;
-  [1, 2, 3].forEach(i => {
-    document.getElementById(`wizard-step-${i}`).style.display = i === n ? 'block' : 'none';
-    const stepEl = document.getElementById(`step-${i}`);
-    stepEl.className = 'step ' + (i < n ? 'done' : i === n ? 'active' : '');
-  });
-};
+  currentService = type;
+  showScreen('screen-' + type);
+}
 
-// ── PAYMENT ───────────────────────────────────────────────────────────────
-window.selectPayment = (method) => {
-  state.paymentMethod = method;
-  ['cash', 'card', 'online'].forEach(m => {
-    document.getElementById(`pm-${m}`)?.classList.toggle('selected', m === method);
-  });
-};
+// ── IMAGE PREVIEW ─────────────────────────────────────────────
+function previewImage(input, boxId, dataId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const box = document.getElementById(boxId);
+    box.innerHTML = `<img src="${e.target.result}" alt="Car photo">`;
+    box.classList.add('has-image');
+    box.classList.remove('error');
+    document.getElementById(dataId).value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
 
-document.getElementById('amountReceived').addEventListener('input', function () {
-  const total    = state.selectedServices.reduce((s, i) => s + i.price, 0);
-  const received = parseFloat(this.value) || 0;
-  const change   = received - total;
-  const changeRow = document.getElementById('changeRow');
-  if (received > 0 && state.paymentMethod === 'cash') {
-    changeRow.style.display = 'block';
-    document.getElementById('changeAmount').textContent =
-      `£${Math.max(0, change).toFixed(2)}`;
-  } else {
-    changeRow.style.display = 'none';
-  }
-});
-
-// ── ORDER SUBMIT ──────────────────────────────────────────────────────────
-window.submitOrder = async () => {
-  const plate    = document.getElementById('plate').value.trim().toUpperCase();
-  const received = parseFloat(document.getElementById('amountReceived').value) || 0;
-  const total    = state.selectedServices.reduce((s, i) => s + i.price, 0);
-
-  if (!plate) { alert('Enter vehicle plate'); return; }
-  if (received < total && state.paymentMethod !== 'online') {
-    if (!confirm(`Amount received (£${received}) is less than total (£${total}). Record as partial payment?`)) {
+// ── PAYMENT ───────────────────────────────────────────────────
+function proceedToPayment(type) {
+  if (type === 'wash') {
+    const plate = document.getElementById('washPlate').value.trim();
+    if (!plate) {
+      showToast('Please enter vehicle plate number');
+      document.getElementById('washPlate').focus();
+      return;
+    }
+    const photo = document.getElementById('washImgData').value;
+    if (!photo) {
+      showToast('Please take a photo of the car & parking spot');
+      const box = document.getElementById('washImgBox');
+      box.classList.add('error');
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
   }
-
-  document.getElementById('submitBtn').disabled = true;
-
-  const orderId = uuidv4();
-  const services = state.selectedServices.map(s => ({
-    ...s,
-    id:              uuidv4(),
-    location_details: document.getElementById('locationDetail').value,
-    location_id:      document.getElementById('locationSelect').value || null,
-  }));
-
-  // Queue order creation
-  await queueOrderCreate({
-    id:             orderId,
-    vehicle_plate:  plate,
-    vehicle_make:   document.getElementById('make').value,
-    vehicle_model:  document.getElementById('model').value,
-    customer_phone: document.getElementById('phone').value,
-    notes:          document.getElementById('notes').value,
-    services,
-    source:         'agent',
-  });
-
-  // Queue payment if amount > 0
-  if (received > 0) {
-    await queuePayment(orderId, {
-      payment_method: state.paymentMethod,
-      amount:         Math.min(received, total),
-    });
-  }
-
-  // Cache order locally for immediate display
-  await dbPut('order_cache', {
-    id:             orderId,
-    vehicle_plate:  plate,
-    payment_status: received >= total ? 'paid' : received > 0 ? 'partial' : 'unpaid',
-    total_amount:   total,
-    paid_amount:    Math.min(received, total),
-    service_count:  services.length,
-    created_at:     new Date().toISOString(),
-    _local:         true,
-  });
-
-  // Show success
-  document.getElementById('successDetail').textContent =
-    `${services.length} service${services.length > 1 ? 's' : ''} queued for assignment`;
-  document.getElementById('successModal').classList.add('show');
-  document.getElementById('submitBtn').disabled = false;
-};
-
-window.newOrder = () => {
-  document.getElementById('successModal').classList.remove('show');
-  // Reset form
-  document.getElementById('plate').value  = '';
-  document.getElementById('make').value   = '';
-  document.getElementById('model').value  = '';
-  document.getElementById('phone').value  = '';
-  document.getElementById('notes').value  = '';
-  document.getElementById('locationDetail').value = '';
-  state.selectedServices = [];
-  document.querySelectorAll('.service-item').forEach(el => el.classList.remove('selected'));
-  updateSummary();
-  goToStep(1);
-  loadOrders();
-};
-
-// ── ORDERS LIST ───────────────────────────────────────────────────────────
-async function loadOrders() {
-  let orders = [];
-  try {
-    if (navigator.onLine) {
-      const r = await fetch('/api/orders');
-      const d = await r.json();
-      orders = d.data ?? [];
-    } else {
-      orders = await dbGetAll('order_cache');
-    }
-  } catch {
-    orders = await dbGetAll('order_cache');
-  }
-  state.orders = orders;
-  renderOrders(orders);
+  currentService = type;
+  const svc = services[type];
+  const price = svc ? parseFloat(svc.price || svc.base_price || 0).toFixed(2) : '0.00';
+  document.getElementById('payAmount').textContent = price;
+  document.getElementById('payBackBtn').setAttribute('onclick', `goBack('screen-${type}')`);
+  selectPayment('cash');
+  showScreen('screen-payment');
 }
 
-function renderOrders(orders) {
-  const container = document.getElementById('ordersList');
-  if (!orders.length) {
-    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:40px 0;">No orders</div>';
+function selectPayment(method) {
+  selectedPayMethod = method;
+  document.querySelectorAll('.pay-opt').forEach(o => {
+    o.classList.toggle('selected', o.dataset.method === method);
+  });
+
+  if (method === 'link') {
+    document.getElementById('linkBox').style.display = 'block';
+    document.getElementById('cashCardConfirm').style.display = 'none';
+    generateStripeLink();
+  } else {
+    document.getElementById('linkBox').style.display = 'none';
+    document.getElementById('cashCardConfirm').style.display = 'block';
+  }
+}
+
+async function generateStripeLink() {
+  const svc = services[currentService];
+  if (!svc) { showToast('Service not found'); return; }
+
+  const urlEl = document.getElementById('stripeUrl');
+  urlEl.textContent = 'Generating link…';
+  stripePaymentLink = null;
+
+  const customerName  = currentService === 'wash'
+    ? (document.getElementById('washCustomerName')?.value.trim()  || '')
+    : (document.getElementById('porterName')?.value.trim()        || '');
+  const customerPhone = currentService === 'wash'
+    ? (document.getElementById('washCustomerPhone')?.value.trim() || '')
+    : (document.getElementById('porterPhone')?.value.trim()       || '');
+  const plate = currentService === 'wash'
+    ? document.getElementById('washPlate').value.trim().toUpperCase()
+    : 'PORTER';
+  const floor = document.getElementById('washFloor')?.value.trim() || '';
+  const zone  = document.getElementById('washZone')?.value.trim()  || '';
+  const bay   = document.getElementById('washBay')?.value.trim()   || '';
+  const locStr = [floor, zone, bay].filter(Boolean).join(' / ') || '';
+  const imgData = document.getElementById('washImgData')?.value || '';
+
+  const body = {
+    vehicle_plate: plate,
+    customer_name: customerName,
+    customer_phone: customerPhone,
+    notes: currentService === 'porter'
+      ? (document.getElementById('porterTerminal')?.value.trim() || '')
+      : locStr,
+    services: [{
+      service_id: svc.id,
+      location_details: locStr,
+      image_path: imgData || null
+    }],
+    agent_id: currentAgent?.id,
+    source: 'agent'
+  };
+
+  try {
+    const res = await fetch(API + '/customer/stripe-link', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(body)
+    });
+    const json = await res.json().catch(() => ({}));
+    if (json?.success && json?.url) {
+      stripePaymentLink = json.url;
+      generatedOrderId  = json.order_id;
+      urlEl.textContent = json.url;
+    } else {
+      urlEl.textContent = 'Could not generate link';
+      showToast(json?.error || 'Could not generate payment link');
+    }
+  } catch(e) {
+    urlEl.textContent = 'Connection error';
+    showToast('Connection error');
+  }
+}
+
+function finishLinkFlow() {
+  if (!generatedOrderId) { showToast('No order yet — generate the link first'); return; }
+  showSuccessScreen(generatedOrderId, false);
+}
+
+function copyLink() {
+  if (!stripePaymentLink) return;
+  navigator.clipboard.writeText(stripePaymentLink).then(() => showToast('Link copied!'));
+}
+
+async function confirmPayment() {
+  const btn = document.getElementById('confirmPayBtn');
+  btn.disabled = true; btn.textContent = 'Creating order…';
+  const ok = await createOrder({ payNow: true });
+  if (!ok) { btn.disabled = false; btn.textContent = '✓ Confirm Payment & Create Order'; }
+}
+
+async function dataUrlToBlob(dataUrl) {
+  const res = await fetch(dataUrl);
+  return await res.blob();
+}
+
+async function createOrder({ payNow }) {
+  const svc = services[currentService];
+  if (!svc) { showToast('Service not found'); return false; }
+
+  const customerName  = currentService === 'wash'
+    ? (document.getElementById('washCustomerName')?.value.trim()  || '')
+    : (document.getElementById('porterName')?.value.trim()        || '');
+  const customerPhone = currentService === 'wash'
+    ? (document.getElementById('washCustomerPhone')?.value.trim() || '')
+    : (document.getElementById('porterPhone')?.value.trim()       || '');
+
+  const plate  = currentService === 'wash'
+    ? document.getElementById('washPlate').value.trim().toUpperCase()
+    : 'PORTER';
+  const floor  = document.getElementById('washFloor')?.value.trim() || '';
+  const zone   = document.getElementById('washZone')?.value.trim()  || '';
+  const bay    = document.getElementById('washBay')?.value.trim()   || '';
+  const locStr = [floor, zone, bay].filter(Boolean).join(' / ') || '';
+  const ref    = document.getElementById('payRef')?.value.trim() || '';
+  const imgData = document.getElementById('washImgData')?.value || '';
+  const uuidRef = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36));
+
+  if (currentService === 'wash' && !imgData) {
+    showToast('Photo is required for car wash orders');
+    return false;
+  }
+
+  // Upload image first (wash only)
+  let imagePath = null;
+  if (currentService === 'wash') {
+    try {
+      const blob = await dataUrlToBlob(imgData);
+      const fd = new FormData();
+      fd.append('image', blob, 'car.jpg');
+      const upRes = await fetch(API + '/customer/upload', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + TOKEN },
+        body: fd,
+      });
+      const upJson = await upRes.json().catch(() => ({}));
+      if (!upRes.ok || !upJson?.path) {
+        showToast(upJson?.error || 'Photo upload failed');
+        return false;
+      }
+      imagePath = upJson.path;
+    } catch (e) {
+      showToast('Photo upload error');
+      return false;
+    }
+  }
+
+  const orderBody = {
+    vehicle_plate: plate,
+    location_id: null,
+    customer_name: customerName,
+    customer_phone: customerPhone,
+    notes: currentService === 'porter'
+      ? (document.getElementById('porterTerminal')?.value.trim() || '')
+      : locStr,
+    services: [{
+      service_id: svc.id,
+      location_details: locStr,
+      image_path: imagePath
+    }],
+    email: '',
+    phone: customerPhone,
+    agent_id: currentAgent?.id,
+    source: 'agent'
+  };
+
+  const orderRes = await apiFetch('/customer/booking', {
+    method: 'POST', body: JSON.stringify(orderBody)
+  });
+
+  let orderId;
+  if (orderRes?.order_id) {
+    orderId = orderRes.order_id;
+
+    if (payNow) {
+      await apiFetch(`/orders/${orderId}/payments`, {
+        method: 'POST',
+        body: JSON.stringify({
+          payment_method: selectedPayMethod,
+          amount: parseFloat(svc.price || svc.base_price || 0),
+          uuid_ref: uuidRef,
+          transaction_ref: ref || uuidRef,
+          status: 'success'
+        })
+      });
+    }
+  } else {
+    if (orderRes?.message || orderRes?.error) {
+      showToast(orderRes.message || orderRes.error);
+      return false;
+    }
+    orderId = 'OFFLINE-' + uuidRef.slice(0,8).toUpperCase();
+    showToast('Saved locally — will sync when reconnected');
+  }
+
+  generatedOrderId = orderId;
+  showSuccessScreen(orderId, payNow);
+  return true;
+}
+
+function showSuccessScreen(orderId, paid) {
+  document.getElementById('successOrderId').textContent = orderId;
+  if (currentService === 'wash') {
+    document.getElementById('successWashNote').style.display = 'block';
+    document.getElementById('successMsg').textContent = paid
+      ? 'Car wash order created. A provider will attend to the vehicle shortly.'
+      : 'Car wash order created (unpaid). It will activate automatically once the customer pays.';
+  } else {
+    document.getElementById('successWashNote').style.display = 'none';
+    document.getElementById('successMsg').textContent = paid
+      ? 'Porter service recorded. Complete the service and mark done from Orders.'
+      : 'Porter order created (unpaid). Confirm payment from Orders when collected.';
+  }
+  showScreen('screen-success');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+}
+
+function resetToNew() {
+  [
+    'washPlate','washFloor','washZone','washBay',
+    'washCustomerName','washCustomerPhone',
+    'porterName','porterPhone','porterTerminal',
+    'payRef'
+  ].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const box = document.getElementById('washImgBox');
+  box.innerHTML = '<div class="img-upload-icon">📸</div><div class="img-upload-text">Tap to take photo</div>';
+  box.classList.remove('has-image');
+  box.classList.remove('error');
+  document.getElementById('washImgData').value = '';
+  stripePaymentLink = null;
+  switchTab('new');
+}
+
+// ── DATERANGE PICKER ──────────────────────────────────────────
+function initDateRangePicker() {
+  if (typeof $ === 'undefined' || typeof $.fn.daterangepicker === 'undefined') {
+    setTimeout(initDateRangePicker, 200);
     return;
   }
-  container.innerHTML = orders.map(o => `
-    <div class="order-item">
-      <div class="order-header">
-        <div>
-          <div class="order-plate">${o.vehicle_plate}</div>
-          <div class="order-meta">${o.agent_name ?? 'You'} · ${timeAgo(o.created_at)}</div>
-        </div>
-        <span class="badge badge-${o.payment_status}">
-          ${o.payment_status === 'unpaid' ? 'Unpaid' : o.payment_status === 'partial' ? 'Partial' : 'Paid'}
-        </span>
-      </div>
-      <div style="margin-top:8px;font-size:13px;color:var(--text2);">
-        £${parseFloat(o.paid_amount||0).toFixed(2)} / £${parseFloat(o.total_amount).toFixed(2)}
-        <span style="color:var(--text3);">· ${o.service_count ?? o.services?.length ?? 0} services</span>
-        ${o._local ? '<span style="color:var(--warning);margin-left:6px;">⏳ syncing</span>' : ''}
-      </div>
-    </div>
-  `).join('');
+
+  const start = moment().subtract(29, 'days').startOf('day');
+  const end   = moment().endOf('day');
+
+  $('#agentDateRange').daterangepicker({
+    startDate: start,
+    endDate:   end,
+    maxDate:   moment().endOf('day'),
+    opens:     'center',
+    autoApply: true,
+    locale: {
+      format: 'D MMM YYYY',
+      cancelLabel: 'Cancel',
+    },
+    ranges: {
+      'Today':         [moment(), moment()],
+      'Yesterday':     [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+      'Last 7 Days':   [moment().subtract(6, 'days'), moment()],
+      'Last 30 Days':  [moment().subtract(29, 'days'), moment()],
+      'This Month':    [moment().startOf('month'), moment().endOf('month')],
+      'Last Month':    [moment().subtract(1, 'month').startOf('month'),
+                        moment().subtract(1, 'month').endOf('month')],
+    },
+  }, function(picked_start, picked_end, label) {
+    _agentFrom = picked_start.format('YYYY-MM-DD');
+    _agentTo   = picked_end.format('YYYY-MM-DD');
+    updateAgentDateLabel(picked_start, picked_end, label);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (currentTab === 'orders') loadOrders();
+  });
+
+  // Default to "all time" — no date filter applied
+  _agentFrom = null;
+  _agentTo   = null;
+  document.getElementById('agentDateLabel').textContent = 'All time';
 }
 
-window.filterOrders = () => {
-  const q      = document.getElementById('orderSearch').value.toLowerCase();
-  const status = document.getElementById('statusFilter').value;
-  const filtered = state.orders.filter(o => {
-    const matchText   = !q || o.vehicle_plate.toLowerCase().includes(q);
-    const matchStatus = !status || o.payment_status === status;
-    return matchText && matchStatus;
-  });
-  renderOrders(filtered);
-};
+function updateAgentDateLabel(start, end, label) {
+  const el = document.getElementById('agentDateLabel');
+  if (!el) return;
+  if (label && label !== 'Custom Range') {
+    el.textContent = label;
+  } else {
+    el.textContent = start.format('D MMM') + ' – ' + end.format('D MMM YYYY');
+  }
+}
 
-// ── REPORTS ───────────────────────────────────────────────────────────────
-async function loadReport() {
-  if (!navigator.onLine) return;
+function clearAgentRange() {
+  _agentFrom = null;
+  _agentTo   = null;
+  document.getElementById('agentDateLabel').textContent = 'All time';
+  loadOrders();
+}
+
+// ── ORDERS ────────────────────────────────────────────────────
+function setAgentFilter(val) {
+  _agentFilter = val;
+  document.querySelectorAll('#agentSegFilter .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  loadOrders();
+}
+
+function refreshOrders() {
+  loadOrders();
+  refreshAgentCounts();
+}
+
+async function refreshAgentCounts() {
   try {
-    const r = await fetch('/api/reports/daily');
-    const d = await r.json();
-    const s = d.data?.summary;
-    if (!s) return;
-    document.getElementById('rOrders').textContent  = s.order_count ?? '—';
-    document.getElementById('rRevenue').textContent = `£${parseFloat(s.total_revenue ?? 0).toFixed(2)}`;
-    document.getElementById('rCash').textContent    = `£${parseFloat(s.cash ?? 0).toFixed(2)}`;
-    document.getElementById('rCard').textContent    = `£${parseFloat((parseFloat(s.card||0)+parseFloat(s.online||0))).toFixed(2)}`;
-
-    const svcs = d.data?.services ?? [];
-    document.getElementById('serviceBreakdown').innerHTML =
-      '<div class="card-title">Services Today</div>' +
-      svcs.map(s =>
-        `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;">
-           <span>${s.name}</span>
-           <span>${s.count}× · £${parseFloat(s.revenue).toFixed(2)}</span>
-         </div>`
-      ).join('');
-  } catch {}
+    const dateQs = (_agentFrom && _agentTo)
+      ? `&from=${_agentFrom}&to=${_agentTo}`
+      : '';
+    const [actRes, compRes] = await Promise.all([
+      apiFetch(`/orders?status=active&limit=100${dateQs}`),
+      apiFetch(`/orders?status=completed&limit=100${dateQs}`),
+    ]);
+    setSegCount('segCountActive',    (actRes?.data  || []).length);
+    setSegCount('segCountCompleted', (compRes?.data || []).length);
+  } catch (e) { /* swallow */ }
 }
 
-// ── NETWORK + SYNC LISTENERS ──────────────────────────────────────────────
-function setupNetworkListener() {
-  const updateStatus = () => {
-    const online  = navigator.onLine;
-    const dot     = document.getElementById('connDot');
-    const label   = document.getElementById('syncLabel');
-    const banner  = document.getElementById('offlineBanner');
-    dot.className   = 'dot' + (online ? '' : ' offline');
-    label.textContent = online ? 'Connected' : 'Offline';
-    banner.classList.toggle('show', !online);
-  };
-  window.addEventListener('online',  updateStatus);
-  window.addEventListener('offline', updateStatus);
-  updateStatus();
-}
-
-function setupSyncListener() {
-  window.addEventListener('sync:complete', async (e) => {
-    await loadOrders();
-    updateQueueBadge();
-  });
-  window.addEventListener('sync:conflict', (e) => {
-    console.warn('Conflict detected:', e.detail);
-  });
-  setInterval(updateQueueBadge, 5000);
-}
-
-async function updateQueueBadge() {
-  const all      = await syncQueue.getAllActions();
-  const pending  = all.filter(a => a.sync_status === 'pending').length;
-  const badge    = document.getElementById('syncBadge');
-  const label    = document.getElementById('syncLabel');
-  if (pending > 0) {
-    badge.className = 'sync-badge pending';
-    label.textContent = `${pending} pending`;
+function setSegCount(id, n) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (n > 0) {
+    el.style.display = 'inline-block';
+    el.textContent = n > 99 ? '99+' : n;
   } else {
-    badge.className = 'sync-badge';
-    label.textContent = 'Synced';
+    el.style.display = 'none';
   }
 }
 
-// ── QUEUE PANEL ───────────────────────────────────────────────────────────
-window.showQueuePanel = async () => {
-  const all  = await syncQueue.getAllActions();
-  const list = document.getElementById('queueList');
-  if (!all.length) {
-    list.innerHTML = '<div style="color:var(--text3);text-align:center;padding:20px;">Queue empty</div>';
-  } else {
-    list.innerHTML = all.slice().reverse().map(a => `
-      <div class="queue-item">
-        <div class="qi-status ${a.sync_status}"></div>
-        <div class="qi-info">
-          <div class="qi-type">${a.entity_type}: ${a.action_type}</div>
-          <div class="qi-time">${new Date(a.created_at).toLocaleTimeString()} · retries: ${a.retry_count}</div>
-          ${a.fail_reason ? `<div style="color:var(--danger);font-size:11px;">${a.fail_reason}</div>` : ''}
-        </div>
-        <span class="badge badge-${a.sync_status === 'success' ? 'paid' : a.sync_status === 'pending' ? 'partial' : 'unpaid'}">
-          ${a.sync_status}
-        </span>
-      </div>
-    `).join('');
+async function loadOrders(append = false) {
+  refreshAgentCounts();
+
+  const seg = _pagination[_agentFilter];
+  const myGen = append ? _loadGen : ++_loadGen;
+
+  if (!append) {
+    seg.page = 1;
+    seg.hasMore = true;
+    seg.items = [];
   }
-  document.getElementById('queueModal').classList.add('show');
-};
+  if (seg.loading || !seg.hasMore) return;
+  seg.loading = true;
 
-window.hideQueuePanel = () => {
-  document.getElementById('queueModal').classList.remove('show');
-};
+  const qs = new URLSearchParams({ limit: PAGE_SIZE, page: seg.page });
+  if (_agentFilter === 'active') {
+    qs.set('status', 'active');
+  } else if (_agentFilter === 'completed') {
+    qs.set('status', 'completed');
+  }
+  if (_agentFrom) qs.set('from', _agentFrom);
+  if (_agentTo)   qs.set('to',   _agentTo);
 
-// ── TABS ──────────────────────────────────────────────────────────────────
-window.switchTab = (tab) => {
-  document.querySelectorAll('.tab').forEach((t, i) => {
-    const names = ['new-order', 'orders', 'reports'];
-    t.classList.toggle('active', names[i] === tab);
+  const el = document.getElementById('ordersList');
+
+  if (!append) {
+    el.innerHTML = '<div class="load-more-footer"><div class="load-more-spinner"></div><div>Loading…</div></div>';
+  } else {
+    const ind = document.createElement('div');
+    ind.className = 'load-more-footer';
+    ind.id = '_loadMoreInd';
+    ind.innerHTML = '<div class="load-more-spinner"></div><div>Loading more…</div>';
+    el.appendChild(ind);
+  }
+
+  try {
+    const res = await apiFetch(`/orders?${qs.toString()}`);
+
+    // Discard stale loads
+    if (myGen !== _loadGen) {
+      seg.loading = false;
+      document.getElementById('_loadMoreInd')?.remove();
+      return;
+    }
+
+    const newItems = res?.data || [];
+    seg.items = append ? [...seg.items, ...newItems] : newItems;
+    seg.hasMore = newItems.length === PAGE_SIZE;
+    if (seg.hasMore) seg.page += 1;
+  } finally {
+    seg.loading = false;
+    document.getElementById('_loadMoreInd')?.remove();
+  }
+
+  renderOrders(seg);
+  ensureViewportFilled();
+}
+
+function renderOrders(seg) {
+  const el = document.getElementById('ordersList');
+  const from = _agentFrom;
+  const to   = _agentTo;
+
+  if (!seg.items.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:50px 20px;color:var(--text3)">
+        <div style="font-size:42px;margin-bottom:8px">${_agentFilter === 'completed' ? '🎉' : '📋'}</div>
+        <div style="font-size:14px;font-weight:600">No ${_agentFilter} orders</div>
+        <div style="font-size:12px;margin-top:4px">${from || to ? 'Try a different date range' : 'Tap + New to start'}</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML =
+	  seg.items.map(o => {
+		const porter = (o.vehicle_plate || '').toUpperCase() === 'PORTER';
+
+		const customerLine = (o.customer_name || o.customer_phone)
+		  ? `<div class="order-customer">👤 ${escapeHtml(o.customer_name || '—')}${o.customer_phone ? ' · ' + escapeHtml(o.customer_phone) : ''}</div>`
+		  : '';
+
+		const providerLine = o.provider_names
+		  ? `<div class="order-provider">🛠 ${escapeHtml(o.provider_names)}</div>`
+		  : '<div class="order-provider" style="color:var(--text3);font-style:italic">🛠 Awaiting provider</div>';
+
+		// Show "📍 location" only if there's something meaningful
+		const locText = (o.notes && o.notes.trim() && o.notes.trim().toLowerCase() !== 'see photo')
+		  ? `<span>📍 ${escapeHtml(o.notes.trim())}</span>`
+		  : '';
+
+		// Photo icon button — shown when the order has any image attached
+		const photoSrc = resolveImageSrc(o.image_path);
+		const photoBtn = photoSrc
+		  ? `<span class="photo-btn" onclick="event.stopPropagation();openPhoto('${escapeAttr(photoSrc)}')">📸 Photo</span>`
+		  : '';
+
+		return `
+		  <div class="order-card">
+			<div class="order-header">
+			  <div class="order-plate">${porter ? 'Porter' : escapeHtml(o.vehicle_plate || '—')}</div>
+			  <span class="order-type ${porter ? 'porter' : 'wash'}">${porter ? '🧳 Porter' : '🚗 Car Wash'}</span>
+			</div>
+			${customerLine}
+			${providerLine}
+			<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
+			  <span class="status-badge ${o.order_status || 'pending'}">${formatStatus(o.order_status)}</span>
+			  <span class="status-badge ${o.payment_status}">${o.payment_status}</span>
+			  <span style="font-size:13px;font-weight:700;color:var(--accent);margin-left:auto">AED ${parseFloat(o.total_amount||0).toFixed(2)}</span>
+			</div>
+			<div class="order-meta">
+			  ${locText}
+			  <span>🕐 ${fmtTime(o.created_at)}</span>
+			  ${photoBtn}
+			</div>
+		  </div>`;
+	  }).join('') +
+	  (seg.hasMore
+		? '<div class="load-more-footer" id="_loadMoreSentinel">Scroll down to load more</div>'
+		: (seg.items.length > PAGE_SIZE
+			? '<div class="load-end">— end of list —</div>'
+			: ''));
+}
+
+function ensureViewportFilled() {
+  requestAnimationFrame(() => {
+    const docHeight = document.documentElement.scrollHeight;
+    const viewHeight = window.innerHeight;
+    if (docHeight <= viewHeight + 50) {
+      if (currentTab === 'orders') {
+        const seg = _pagination[_agentFilter];
+        if (seg && seg.hasMore && !seg.loading) loadOrders(true);
+      }
+    }
   });
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(`view-${tab}`)?.classList.add('active');
-  if (tab === 'orders') loadOrders();
-  if (tab === 'reports') loadReport();
-};
-
-// ── HELPERS ───────────────────────────────────────────────────────────────
-function timeAgo(iso) {
-  const diff = (Date.now() - new Date(iso)) / 1000;
-  if (diff < 60)   return 'just now';
-  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-  return new Date(iso).toLocaleDateString();
 }
 
-boot();
+function formatStatus(s) {
+  return ({
+    pending:'Pending', assigned:'Assigned', accepted:'Accepted',
+    in_progress:'In Progress', completed:'Completed',
+    cancelled:'Cancelled', rejected:'Rejected'
+  })[s] || s || '—';
+}
+
+// ── INFINITE SCROLL ──────────────────────────────────────────
+function attachScrollLoader() {
+  let scrollPending = false;
+  window.addEventListener('scroll', () => {
+    if (scrollPending) return;
+    scrollPending = true;
+    requestAnimationFrame(() => {
+      scrollPending = false;
+      checkLoadMore();
+    });
+  }, { passive: true });
+}
+
+function checkLoadMore() {
+  if (currentTab !== 'orders') return;
+  const docHeight = document.documentElement.scrollHeight;
+  const scrollPos = window.scrollY + window.innerHeight;
+  if (docHeight - scrollPos > 300) return;
+
+  const seg = _pagination[_agentFilter];
+  if (seg && seg.hasMore && !seg.loading) loadOrders(true);
+}
+
+attachScrollLoader();
+
+// ── UTILS ─────────────────────────────────────────────────────
+function fmtTime(dt) {
+  if (!dt) return '—';
+  const isoSafe = /Z|[+-]\d{2}:?\d{2}$/.test(dt) ? dt : dt.replace(' ', 'T') + 'Z';
+  const d = new Date(isoSafe), now = new Date();
+  if (isNaN(d.getTime())) return '—';
+  const diff = (now - d) / 1000;
+  if (diff < 60)   return 'Just now';
+  if (diff < 3600) return Math.round(diff/60) + 'm ago';
+  if (diff < 86400) return Math.round(diff/3600) + 'h ago';
+  return d.toLocaleDateString('en-AE',{day:'numeric',month:'short'});
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+	
+function escapeAttr(s) {
+  return String(s ?? '').replace(/"/g, '&quot;');
+}
+
+function resolveImageSrc(imagePath) {
+  if (!imagePath) return null;
+  const v = String(imagePath).trim();
+  if (v.startsWith('data:image/')) return v;
+  if (v.startsWith('/uploads/') || v.startsWith('http://') || v.startsWith('https://')) return v;
+  return null;
+}
+
+function openPhoto(src) {
+  document.getElementById('photoModalImg').src = src;
+  document.getElementById('photoModal').classList.add('open');
+}
+
+function closePhoto() {
+  document.getElementById('photoModal').classList.remove('open');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+// ── BOOT ─────────────────────────────────────────────────────
+checkAuth();
 </script>
 
-<!-- Service Worker Registration -->
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/pwa/service-worker/service-worker.js', { scope: '/' })
-    .then(reg => console.log('[SW] Registered'))
-    .catch(err => console.error('[SW] Registration failed:', err));
-}
-</script>
 </body>
 </html>

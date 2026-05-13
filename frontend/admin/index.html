@@ -3,524 +3,457 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AirPark — Admin Control</title>
+<meta name="theme-color" content="#0ea5e9">
+<title>AirVAS — Admin Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!--link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"-->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+	
+<!-- Date Range Picker dependencies -->
+<script src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+<!-- Theme + size tweaks for daterangepicker -->
+<style>
+  /* ── Container ─────────────────────────────────────────── */
+  .daterangepicker {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.10);
+  }
+  .daterangepicker:before, .daterangepicker:after { display: none; }
+
+  /* ── Calendars ─────────────────────────────────────────── */
+  .daterangepicker .drp-calendar {
+    max-width: 220px;
+    padding: 6px;
+  }
+  .daterangepicker .calendar-table {
+    background: var(--card);
+    border: none;
+    padding: 0;
+  }
+  .daterangepicker .calendar-table th,
+  .daterangepicker .calendar-table td {
+    color: var(--text);
+    background: transparent;
+    border-color: transparent;
+    min-width: 26px;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    font-size: 11px;
+    padding: 0;
+  }
+  .daterangepicker .calendar-table .month {
+    font-size: 12px;
+    font-weight: 600;
+    height: 26px;
+    line-height: 26px;
+    color: var(--text);
+  }
+  .daterangepicker .calendar-table .prev,
+  .daterangepicker .calendar-table .next {
+    min-width: 26px;
+    height: 26px;
+    cursor: pointer;
+  }
+  .daterangepicker .calendar-table .prev span,
+  .daterangepicker .calendar-table .next span {
+    border-color: var(--muted2);
+  }
+
+  /* ── Day cells ─────────────────────────────────────────── */
+  .daterangepicker td.available:hover,
+  .daterangepicker th.available:hover {
+    background: var(--hover-bg);
+    color: var(--accent);
+    border-radius: 4px;
+  }
+  .daterangepicker td.off,
+  .daterangepicker td.off.in-range,
+  .daterangepicker td.off.start-date,
+  .daterangepicker td.off.end-date {
+    background: transparent;
+    color: var(--muted);
+  }
+  .daterangepicker td.in-range {
+    background: rgba(14,165,233,0.10);
+    color: var(--text);
+  }
+  .daterangepicker td.start-date,
+  .daterangepicker td.end-date,
+  .daterangepicker td.active,
+  .daterangepicker td.active:hover {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+  }
+  .daterangepicker td.start-date.in-range { border-radius: 4px 0 0 4px; }
+  .daterangepicker td.end-date.in-range   { border-radius: 0 4px 4px 0; }
+  .daterangepicker td.disabled {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+  .daterangepicker td.week,
+  .daterangepicker th.week {
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  /* ── Ranges sidebar ────────────────────────────────────── */
+  .daterangepicker .ranges {
+    width: 130px;
+  }
+  .daterangepicker .ranges ul {
+    width: 130px;
+    padding: 4px 0;
+  }
+  .daterangepicker .ranges li {
+    color: var(--text);
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 0;
+  }
+  .daterangepicker .ranges li:hover {
+    background: var(--hover-bg);
+    color: var(--accent);
+  }
+  .daterangepicker .ranges li.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Footer buttons ────────────────────────────────────── */
+  .daterangepicker .drp-buttons {
+    border-top: 1px solid var(--border);
+    background: var(--hover-bg);
+    padding: 6px 10px;
+  }
+  .daterangepicker .drp-selected {
+    color: var(--muted2);
+    font-size: 11px;
+  }
+  .daterangepicker .drp-buttons .btn {
+    padding: 4px 12px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+  .daterangepicker .drp-buttons .btn.btn-primary,
+  .daterangepicker .drp-buttons .applyBtn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .daterangepicker .drp-buttons .btn.btn-primary:hover,
+  .daterangepicker .drp-buttons .applyBtn:hover {
+    background: var(--accent2);
+    border-color: var(--accent2);
+  }
+  .daterangepicker .drp-buttons .btn.btn-default,
+  .daterangepicker .drp-buttons .cancelBtn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .daterangepicker .drp-buttons .btn.btn-default:hover,
+  .daterangepicker .drp-buttons .cancelBtn:hover {
+    background: var(--hover-bg);
+  }
+
+  /* ── Month/Year dropdowns ──────────────────────────────── */
+  .daterangepicker select.monthselect,
+  .daterangepicker select.yearselect,
+  .daterangepicker select.hourselect,
+  .daterangepicker select.minuteselect,
+  .daterangepicker select.secondselect,
+  .daterangepicker select.ampmselect {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  /* ── Time picker (if enabled) ──────────────────────────── */
+  .daterangepicker .calendar-time {
+    font-size: 11px;
+  }
+	
+/* Orders summary — compact stat cards (scoped so they don't clash with dashboard stats) */
+#ordersStatGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+#ordersStatGrid .stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: none;
+  overflow: visible;
+}
+#ordersStatGrid .stat-card::after { display: none; }      /* kill the decorative corner */
+#ordersStatGrid .stat-card:hover  { border-color: var(--border); }   /* no accent hover */
+#ordersStatGrid .stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 4px;
+}
+#ordersStatGrid .stat-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+</style>
 <style>
   :root {
-    --bg:       #0a0c10;
-    --surface:  #111318;
-    --card:     #171b22;
-    --border:   #252b36;
-    --accent:   #f0b429;
-    --accent2:  #3ecfcf;
-    --danger:   #f75555;
-    --success:  #4ade80;
-    --warning:  #fb923c;
-    --text:     #e8ecf0;
-    --muted:    #6b7585;
-    --font-head: 'Syne', sans-serif;
-    --font-mono: 'DM Mono', monospace;
+    --bg:       #f8fafc;
+    --surface:  #ffffff;
+    --card:     #ffffff;
+    --border:   #e2e8f0;
+    --accent:   #0ea5e9;
+    --accent2:  #0284c7;
+    --danger:   #dc2626;
+    --success:  #16a34a;
+    --warning:  #d97706;
+    --text:     #0f172a;
+    --muted:    #94a3b8;
+    --muted2:   #475569;
+    --hover-bg: #f1f5f9;
+    --font-head: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+	--font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+	--font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    min-height: 100vh;
-    display: flex;
-  }
+	  background: var(--bg); color: var(--text);
+	  font-family: var(--font-body); font-size: 13px;
+	  min-height: 100vh; display: flex;
+	  -webkit-font-smoothing: antialiased;
+	  -moz-osx-font-smoothing: grayscale;
+	  font-feature-settings: 'cv11', 'ss01', 'ss03';
+	}
 
-  /* ── SIDEBAR ─────────────────────────────────────────── */
-  .sidebar {
-    width: 220px;
-    min-height: 100vh;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
-  }
-
-  .sidebar-logo {
-    padding: 28px 20px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sidebar-logo .mark {
-    font-family: var(--font-head);
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--accent);
-  }
-
-  .sidebar-logo .sub {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-
-  .nav-section {
-    padding: 16px 0 8px;
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .nav-label {
-    padding: 6px 20px 4px;
-    font-size: 9px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 20px;
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 12px;
-    transition: all 0.15s;
-    border-left: 3px solid transparent;
-    user-select: none;
-  }
-
-  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
-  .nav-item.active {
-    color: var(--accent);
-    background: rgba(240,180,41,0.07);
-    border-left-color: var(--accent);
-  }
-
+  /* SIDEBAR */
+  .sidebar { width: 220px; min-height: 100vh; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    position: fixed; top:0; left:0; bottom:0; z-index:100; }
+  .sidebar-logo { padding: 28px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .mark { font-family: var(--font-head); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--accent); }
+  .sidebar-logo .sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+  .nav-section { padding: 16px 0 8px; flex: 1; overflow-y: auto; }
+  .nav-label { padding: 6px 20px 4px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+    cursor: pointer; color: var(--muted2); font-size: 12px; transition: all 0.15s;
+    border-left: 3px solid transparent; user-select: none; }
+  .nav-item:hover { color: var(--text); background: var(--hover-bg); }
+  .nav-item.active { color: var(--accent); background: rgba(14,165,233,0.08); border-left-color: var(--accent); }
   .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
-
-  .nav-badge {
-    margin-left: auto;
-    background: var(--danger);
-    color: #fff;
-    font-size: 9px;
-    padding: 2px 5px;
-    border-radius: 999px;
-    font-weight: 500;
-  }
-
-  .sidebar-footer {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .avatar {
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  .nav-badge { margin-left: auto; background: var(--danger); color: #fff;
+    font-size: 9px; padding: 2px 5px; border-radius: 999px; font-weight: 500; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 30px; height: 30px; border-radius: 8px; background: var(--accent);
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--font-head);
-    font-weight: 700;
-    font-size: 12px;
-    color: #000;
-  }
-
+    font-family: var(--font-head); font-weight: 700; font-size: 12px; color: #fff; }
   .user-info { flex: 1; overflow: hidden; }
-  .user-name  { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .user-role  { font-size: 10px; color: var(--muted); }
-
-  .logout-btn {
-    background: none; border: none; color: var(--muted); cursor: pointer;
-    font-size: 15px; padding: 4px; border-radius: 4px;
-    transition: color 0.15s;
-  }
+  .user-name { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 10px; color: var(--muted); }
+  .logout-btn { background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 15px; padding: 4px; border-radius: 4px; transition: color 0.15s; }
   .logout-btn:hover { color: var(--danger); }
 
-  /* ── MAIN ────────────────────────────────────────────── */
-  .main {
-    margin-left: 220px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-
-  .topbar {
-    height: 56px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 28px;
-    gap: 16px;
-    position: sticky; top: 0; z-index: 50;
-  }
-
-  .page-title {
-    font-family: var(--font-head);
-    font-size: 16px;
-    font-weight: 700;
-    flex: 1;
-  }
-
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 28px; gap: 16px;
+    position: sticky; top: 0; z-index: 50; }
+  .page-title { font-family: var(--font-head); font-size: 16px; font-weight: 600; flex: 1; letter-spacing: -0.01em; }
   .topbar-actions { display: flex; align-items: center; gap: 10px; }
 
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 14px;
-    border-radius: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--text);
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+    border-radius: 6px; font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border); background: var(--card);
+    color: var(--text); transition: all 0.15s; white-space: nowrap; }
   .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
-  .btn.primary:hover { background: #ffd166; }
-  .btn.danger  { background: var(--danger); border-color: var(--danger); color: #fff; }
-  .btn.danger:hover { opacity: 0.85; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .btn.primary:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .btn.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .btn.danger:hover { opacity: 0.85; color: #fff; }
   .btn.sm { padding: 4px 10px; font-size: 10px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; border-color: var(--border); color: var(--muted); }
+  .btn:disabled:hover { border-color: var(--border); color: var(--muted); }
 
-  /* ── CONTENT AREA ─────────────────────────────────────── */
-  .content {
-    padding: 28px;
-    flex: 1;
-  }
-
+  .content { padding: 28px; flex: 1; }
   .page { display: none; }
   .page.active { display: block; }
 
-  /* ── STATS GRID ───────────────────────────────────────── */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-  .stat-card:hover { border-color: var(--accent2); }
-
-  .stat-card::after {
-    content: '';
-    position: absolute;
-    top: 0; right: 0;
-    width: 60px; height: 60px;
-    border-radius: 0 10px 0 100%;
-    opacity: 0.1;
-  }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; position: relative; overflow: hidden; transition: border-color 0.2s;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-card::after { content: ''; position: absolute; top: 0; right: 0;
+    width: 60px; height: 60px; border-radius: 0 10px 0 100%; opacity: 0.12; }
   .stat-card:nth-child(1)::after { background: var(--accent); }
   .stat-card:nth-child(2)::after { background: var(--accent2); }
   .stat-card:nth-child(3)::after { background: var(--success); }
   .stat-card:nth-child(4)::after { background: var(--danger); }
-
   .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .stat-value {
-    font-family: var(--font-head);
-    font-size: 32px;
-    font-weight: 800;
-    margin: 8px 0 4px;
-    line-height: 1;
-  }
+  .stat-value { font-family: var(--font-head); font-size: 32px; font-weight: 700;
+  margin: 8px 0 4px; line-height: 1; color: var(--text); letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; }
   .stat-delta { font-size: 10px; color: var(--muted); }
   .stat-delta .up { color: var(--success); }
   .stat-delta .down { color: var(--danger); }
 
-  /* ── PANELS ────────────────────────────────────────────── */
-  .panel {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+  .panel-header { display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .panel-title { font-family: var(--font-head); font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px; color: var(--text); letter-spacing: -0.01em; }
 
-  .panel-header {
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { padding: 10px 16px; text-align: left; font-size: 9px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted); background: var(--hover-bg);
+    border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(14,165,233,0.04); }
+  tbody td { padding: 11px 16px; vertical-align: middle; color: var(--text); }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  /* PAGINATOR */
+  .paginator {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .panel-title {
-    font-family: var(--font-head);
-    font-size: 13px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* ── TABLE ─────────────────────────────────────────────── */
-  .table-wrap { overflow-x: auto; }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-
-  thead th {
-    padding: 10px 16px;
-    text-align: left;
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    background: rgba(255,255,255,0.02);
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(255,255,255,0.025); }
-
-  tbody td {
-    padding: 11px 16px;
-    vertical-align: middle;
-    color: var(--text);
-  }
-
-  .mono { font-family: var(--font-mono); }
-
-  /* ── BADGES ─────────────────────────────────────────────── */
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  .badge.pending    { background: rgba(251,146,60,0.12); color: var(--warning); border: 1px solid rgba(251,146,60,0.2); }
-  .badge.assigned   { background: rgba(62,207,207,0.12); color: var(--accent2); border: 1px solid rgba(62,207,207,0.2); }
-  .badge.accepted   { background: rgba(62,207,207,0.18); color: var(--accent2); border: 1px solid rgba(62,207,207,0.3); }
-  .badge.in_progress{ background: rgba(240,180,41,0.12); color: var(--accent);  border: 1px solid rgba(240,180,41,0.2); }
-  .badge.completed  { background: rgba(74,222,128,0.12); color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
-  .badge.cancelled  { background: rgba(247,85,85,0.12);  color: var(--danger);  border: 1px solid rgba(247,85,85,0.2); }
-  .badge.rejected   { background: rgba(247,85,85,0.1);   color: var(--danger);  border: 1px solid rgba(247,85,85,0.15); }
-  .badge.unpaid     { background: rgba(247,85,85,0.12);  color: var(--danger);  border: 1px solid rgba(247,85,85,0.2); }
-  .badge.partial    { background: rgba(251,146,60,0.12); color: var(--warning); border: 1px solid rgba(251,146,60,0.2); }
-  .badge.paid       { background: rgba(74,222,128,0.12); color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
-  .badge.admin      { background: rgba(240,180,41,0.15); color: var(--accent);  border: 1px solid rgba(240,180,41,0.25); }
-  .badge.agent      { background: rgba(62,207,207,0.12); color: var(--accent2); border: 1px solid rgba(62,207,207,0.2); }
-  .badge.provider   { background: rgba(74,222,128,0.12); color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
-
-  /* ── FILTERS BAR ─────────────────────────────────────────── */
-  .filters {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    border-top: 1px solid var(--border);
+    background: var(--hover-bg);
     flex-wrap: wrap;
+    gap: 12px;
+  }
+  .paginator-info { font-size: 12px; color: var(--muted); }
+  .paginator-info strong { color: var(--text); font-weight: 600; }
+  .paginator-controls { display: flex; align-items: center; gap: 8px; }
+  .page-indicator {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    padding: 0 8px; min-width: 90px; text-align: center;
   }
 
-  .filter-input {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 6px 12px;
-    border-radius: 6px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .filter-input:focus { border-color: var(--accent2); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .badge.pending     { background: rgba(217,119,6,0.12);  color: var(--warning); border: 1px solid rgba(217,119,6,0.25); }
+  .badge.assigned    { background: rgba(14,165,233,0.12); color: var(--accent);  border: 1px solid rgba(14,165,233,0.25); }
+  .badge.accepted    { background: rgba(2,132,199,0.14);  color: var(--accent2); border: 1px solid rgba(2,132,199,0.3); }
+  .badge.in_progress { background: rgba(217,119,6,0.12);  color: var(--warning); border: 1px solid rgba(217,119,6,0.25); }
+  .badge.completed   { background: rgba(22,163,74,0.12);  color: var(--success); border: 1px solid rgba(22,163,74,0.25); }
+  .badge.cancelled   { background: rgba(220,38,38,0.12);  color: var(--danger);  border: 1px solid rgba(220,38,38,0.25); }
+  .badge.rejected    { background: rgba(220,38,38,0.10);  color: var(--danger);  border: 1px solid rgba(220,38,38,0.20); }
+  .badge.unpaid      { background: rgba(220,38,38,0.12);  color: var(--danger);  border: 1px solid rgba(220,38,38,0.25); }
+  .badge.partial     { background: rgba(217,119,6,0.12);  color: var(--warning); border: 1px solid rgba(217,119,6,0.25); }
+  .badge.paid        { background: rgba(22,163,74,0.12);  color: var(--success); border: 1px solid rgba(22,163,74,0.25); }
+  .badge.admin       { background: rgba(14,165,233,0.14); color: var(--accent);  border: 1px solid rgba(14,165,233,0.3); }
+  .badge.agent       { background: rgba(2,132,199,0.12);  color: var(--accent2); border: 1px solid rgba(2,132,199,0.25); }
+  .badge.provider    { background: rgba(22,163,74,0.12);  color: var(--success); border: 1px solid rgba(22,163,74,0.25); }
+  .badge.customer    { background: rgba(148,163,184,0.18); color: var(--muted2); border: 1px solid rgba(148,163,184,0.3); }
+
+  .filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .filter-input { background: var(--card); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--font-mono); font-size: 11px; padding: 6px 12px; border-radius: 6px;
+    outline: none; transition: border-color 0.15s; }
+  .filter-input:focus { border-color: var(--accent); }
   .filter-input::placeholder { color: var(--muted); }
-
   select.filter-input { cursor: pointer; }
 
-  /* ── TWO-COL LAYOUT ─────────────────────────────────────── */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .feed-list { max-height: 340px; overflow-y: auto; }
+  .feed-item { display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    transition: background 0.1s; animation: feedIn 0.3s ease; }
+  @keyframes feedIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .feed-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .feed-dot.new      { background: var(--accent);  box-shadow: 0 0 6px rgba(14,165,233,0.5); }
+  .feed-dot.payment  { background: var(--success); box-shadow: 0 0 6px rgba(22,163,74,0.5); }
+  .feed-dot.complete { background: var(--accent2); box-shadow: 0 0 6px rgba(2,132,199,0.5); }
+  .feed-dot.alert    { background: var(--danger);  box-shadow: 0 0 6px rgba(220,38,38,0.5); }
+  .feed-text { font-size: 12px; color: var(--text); }
+  .feed-time { font-size: 10px; color: var(--muted); margin-top: 2px; }
 
-  /* ── LIVE FEED ──────────────────────────────────────────── */
-  .feed-list {
-    max-height: 340px;
-    overflow-y: auto;
-  }
-
-  .feed-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-    animation: feedIn 0.3s ease;
-  }
-
-  @keyframes feedIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .feed-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    margin-top: 4px;
-    flex-shrink: 0;
-  }
-  .feed-dot.new       { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
-  .feed-dot.payment   { background: var(--success);  box-shadow: 0 0 6px var(--success); }
-  .feed-dot.complete  { background: var(--accent);   box-shadow: 0 0 6px var(--accent); }
-  .feed-dot.alert     { background: var(--danger);   box-shadow: 0 0 6px var(--danger); }
-
-  .feed-text  { font-size: 12px; color: var(--text); }
-  .feed-time  { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
-  /* ── MODAL ──────────────────────────────────────────────── */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
-    z-index: 200;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.4);
+    backdrop-filter: blur(4px); z-index: 200; display: none;
+    align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    width: 460px;
-    max-width: 95vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: modalIn 0.2s ease;
-  }
-
-  @keyframes modalIn {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-  }
-
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .modal-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+  .modal { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    width: 460px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    animation: modalIn 0.2s ease; box-shadow: 0 12px 48px rgba(15,23,42,0.15); }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .modal-header { display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+  .modal-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: var(--text); }
   .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
   .modal-close:hover { color: var(--danger); }
-
-  .modal-body { padding: 20px 24px; }
-  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
-
+  .modal-body { padding: 20px 24px; color: var(--text); }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px; }
   .form-group { margin-bottom: 16px; }
-  .form-label { display: block; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-  .form-input {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 9px 12px;
-    border-radius: 6px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .form-input:focus { border-color: var(--accent2); }
+  .form-label { display: block; font-size: 10px; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .form-input { width: 100%; background: var(--card); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-mono); font-size: 12px;
+    padding: 9px 12px; border-radius: 6px; outline: none; transition: border-color 0.15s; }
+  .form-input:focus { border-color: var(--accent); }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  /* ── PROVIDER STATS BAR ─────────────────────────────────── */
-  .provider-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border);
+  .svc-check-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px; border-radius: 6px;
+    cursor: pointer; transition: background .15s;
+    user-select: none;
   }
+  .svc-check-row:hover { background: var(--hover-bg); }
+  .svc-check-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+  .svc-check-row .svc-name { font-size: 13px; flex: 1; color: var(--text); }
+  .svc-check-row .svc-price { font-size: 12px; color: var(--accent); font-weight: 600; }
+
+  .provider-bar { display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-bottom: 1px solid var(--border); }
   .provider-bar:last-child { border-bottom: none; }
+  .load-bar { flex: 1; height: 4px; background: var(--border); border-radius: 999px; overflow: hidden; }
+  .load-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.4s ease; }
 
-  .load-bar {
-    flex: 1;
-    height: 4px;
-    background: var(--border);
-    border-radius: 999px;
-    overflow: hidden;
-  }
-  .load-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    transition: width 0.4s ease;
-  }
-
-  /* ── CHART PLACEHOLDER ──────────────────────────────────── */
-  .chart-area {
-    padding: 20px;
-    height: 180px;
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-  }
-
-  .bar-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    height: 100%;
-    justify-content: flex-end;
-  }
-
-  .bar-fill {
-    width: 100%;
-    border-radius: 4px 4px 0 0;
-    background: var(--accent2);
-    opacity: 0.7;
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor: pointer;
-    position: relative;
-  }
+  .chart-area { padding: 20px; height: 180px; display: flex; align-items: flex-end; gap: 6px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .bar-fill { width: 100%; border-radius: 4px 4px 0 0; background: var(--accent);
+    opacity: 0.55; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer; position: relative; }
   .bar-fill:hover { opacity: 1; }
-  .bar-fill.accent { background: var(--accent); }
-  .bar-fill.today  { background: var(--accent); opacity: 1; }
-
+  .bar-fill.today { opacity: 1; }
   .bar-label { font-size: 9px; color: var(--muted); }
-
-  /* ── SEARCH HIGHLIGHT ────────────────────────────────────── */
   .highlight { color: var(--accent); }
 
-  /* ── RESPONSIVE ─────────────────────────────────────────── */
   @media (max-width: 1100px) {
     .stats-grid { grid-template-columns: repeat(2,1fr); }
     .two-col { grid-template-columns: 1fr; }
@@ -531,115 +464,81 @@
     .main { margin-left: 0; }
   }
 
-  /* ── LOADING STATE ───────────────────────────────────────── */
-  .skeleton {
-    background: linear-gradient(90deg, var(--border) 25%, rgba(255,255,255,0.06) 50%, var(--border) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-    border-radius: 4px;
-    height: 14px;
-  }
-  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  .online-dot { display: inline-block; width: 7px; height: 7px;
+    background: var(--success); border-radius: 50%; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
+    50% { box-shadow: 0 0 0 5px rgba(22,163,74,0); } }
 
-  /* ── PULSE ONLINE INDICATOR ──────────────────────────────── */
-  .online-dot {
-    display: inline-block;
-    width: 7px; height: 7px;
-    background: var(--success);
-    border-radius: 50%;
-    margin-right: 6px;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
-    50%       { box-shadow: 0 0 0 5px rgba(74,222,128,0); }
-  }
-
-  /* ── TOAST NOTIFICATIONS ─────────────────────────────────── */
-  #toasts {
-    position: fixed;
-    bottom: 24px; right: 24px;
-    z-index: 999;
-    display: flex;
-    flex-direction: column-reverse;
-    gap: 8px;
-  }
-
-  .toast {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent2);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 12px;
-    min-width: 260px;
-    animation: toastIn 0.25s ease;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
+  #toasts { position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    display: flex; flex-direction: column-reverse; gap: 8px; }
+  .toast { background: var(--card); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 8px; padding: 12px 16px;
+    font-size: 12px; min-width: 260px; animation: toastIn 0.25s ease;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.10); color: var(--text); }
   .toast.success { border-left-color: var(--success); }
   .toast.error   { border-left-color: var(--danger); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); } }
 
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-
-  /* scrollbar */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* LOGIN */
+  #loginScreen { display: flex; position: fixed; inset: 0;
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    z-index: 999; align-items: center; justify-content: center; padding: 20px; }
+  #loginScreen .login-card { background: #ffffff; border-radius: 16px;
+    padding: 36px 32px; width: 400px; max-width: 95vw;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.18); }
+  #loginScreen .login-brand { text-align: center; margin-bottom: 28px; }
+  #loginScreen .login-logo { font-family: var(--font-head); font-size: 28px;
+  font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+  #loginScreen .login-sub { font-size: 11px; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  #loginScreen .login-field { margin-bottom: 14px; }
+  #loginScreen .login-field label { display: block; font-size: 12px;
+    color: var(--muted2); font-weight: 500; margin-bottom: 6px;
+    letter-spacing: 0.3px; text-transform: none; }
+  #loginScreen .login-field input { width: 100%; background: #f8fafc;
+    border: 1.5px solid #e2e8f0; color: var(--text); font-family: var(--font-body);
+    font-size: 13px; padding: 11px 14px; border-radius: 10px; outline: none;
+    transition: border-color 0.15s; }
+  #loginScreen .login-field input:focus { border-color: var(--accent); background: #ffffff; }
+  #loginScreen #loginError { color: var(--danger); font-size: 12px;
+    min-height: 18px; margin: 4px 0 12px; font-weight: 500; }
+  #loginScreen #loginBtn { width: 100%; background: var(--accent); border: none;
+    color: #fff; font-family: var(--font-head); font-size: 15px; font-weight: 700;
+    padding: 13px; border-radius: 10px; cursor: pointer; transition: background 0.15s; }
+  #loginScreen #loginBtn:hover:not(:disabled) { background: var(--accent2); }
+  #loginScreen #loginBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #loginScreen .login-foot { text-align: center; font-size: 12px; color: var(--muted); margin-top: 18px; }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════ SIDEBAR ═══════════════ -->
 <aside class="sidebar" id="sidebar" style="display:none">
   <div class="sidebar-logo">
-    <div class="mark">✈ AirPark</div>
+    <div class="mark">✈ AirVAS</div>
     <div class="sub">Admin Control</div>
   </div>
-
   <nav class="nav-section">
     <div class="nav-label">Overview</div>
-    <div class="nav-item active" data-page="dashboard">
-      <span class="icon">⬡</span> Dashboard
-    </div>
-    <div class="nav-item" data-page="live">
-      <span class="icon">◉</span> Live Feed
-      <span class="nav-badge" id="live-badge">0</span>
-    </div>
-
+    <div class="nav-item active" data-page="dashboard"><span class="icon">⬡</span> Dashboard</div>
+    <div class="nav-item" data-page="live"><span class="icon">◉</span> Live Feed<span class="nav-badge" id="live-badge">0</span></div>
     <div class="nav-label" style="margin-top:8px">Operations</div>
-    <div class="nav-item" data-page="orders">
-      <span class="icon">◈</span> Orders
-    </div>
-    <div class="nav-item" data-page="providers">
-      <span class="icon">◎</span> Providers
-    </div>
-    <div class="nav-item" data-page="assignments">
-      <span class="icon">⟳</span> Assignments
-    </div>
-
+    <div class="nav-item" data-page="orders"><span class="icon">◈</span> Orders</div>
+    <div class="nav-item" data-page="providers"><span class="icon">◎</span> Providers</div>
+    <div class="nav-item" data-page="assignments"><span class="icon">⟳</span> Assignments</div>
     <div class="nav-label" style="margin-top:8px">Finance</div>
-    <div class="nav-item" data-page="payments">
-      <span class="icon">◆</span> Payments
-    </div>
-    <div class="nav-item" data-page="reports">
-      <span class="icon">▦</span> Reports
-    </div>
-
+    <div class="nav-item" data-page="payments"><span class="icon">◆</span> Payments</div>
+    <div class="nav-item" data-page="reports"><span class="icon">▦</span> Reports</div>
     <div class="nav-label" style="margin-top:8px">Configuration</div>
-    <div class="nav-item" data-page="services">
-      <span class="icon">⊞</span> Services
-    </div>
-    <div class="nav-item" data-page="locations">
-      <span class="icon">⊙</span> Locations
-    </div>
-    <div class="nav-item" data-page="users">
-      <span class="icon">◑</span> Users
-    </div>
+    <div class="nav-item" data-page="services"><span class="icon">⊞</span> Services</div>
+    <div class="nav-item" data-page="locations"><span class="icon">⊙</span> Locations</div>
+    <div class="nav-item" data-page="users"><span class="icon">◑</span> Users</div>
   </nav>
-
   <div class="sidebar-footer">
     <div class="avatar" id="adminAvatar">A</div>
     <div class="user-info">
@@ -650,10 +549,7 @@
   </div>
 </aside>
 
-<!-- ═══════════════ MAIN ═══════════════ -->
 <main class="main" id="mainContent" style="display:none">
-
-  <!-- TOPBAR -->
   <header class="topbar">
     <div class="page-title" id="pageTitle">Dashboard</div>
     <div class="topbar-actions">
@@ -663,36 +559,17 @@
     </div>
   </header>
 
-  <!-- CONTENT -->
   <div class="content">
 
-    <!-- ── DASHBOARD ───────────────────────────────────────── -->
     <div class="page active" id="page-dashboard">
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Today's Orders</div>
-          <div class="stat-value" id="stat-orders">—</div>
-          <div class="stat-delta">vs yesterday: <span class="up" id="stat-orders-delta">+0</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Revenue Today</div>
-          <div class="stat-value" id="stat-revenue">—</div>
-          <div class="stat-delta">cash + card + online</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Active Jobs</div>
-          <div class="stat-value" id="stat-active">—</div>
-          <div class="stat-delta">across all providers</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Pending Payments</div>
-          <div class="stat-value" id="stat-unpaid">—</div>
-          <div class="stat-delta">orders unpaid/partial</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Today's Orders</div><div class="stat-value" id="stat-orders">—</div><div class="stat-delta">vs yesterday: <span class="up" id="stat-orders-delta">+0</span></div></div>
+        <div class="stat-card"><div class="stat-label">Revenue Today</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-delta">cash + card + online</div></div>
+        <div class="stat-card"><div class="stat-label">Active Jobs</div><div class="stat-value" id="stat-active">—</div><div class="stat-delta">across all providers</div></div>
+        <div class="stat-card"><div class="stat-label">Pending Payments</div><div class="stat-value" id="stat-unpaid">—</div><div class="stat-delta">orders unpaid/partial</div></div>
       </div>
 
       <div class="two-col">
-        <!-- Revenue chart -->
         <div class="panel">
           <div class="panel-header">
             <div class="panel-title">▦ 7-Day Revenue</div>
@@ -705,8 +582,6 @@
           </div>
           <div class="chart-area" id="revenueChart"></div>
         </div>
-
-        <!-- Provider load -->
         <div class="panel">
           <div class="panel-header">
             <div class="panel-title">◎ Provider Load</div>
@@ -718,7 +593,6 @@
         </div>
       </div>
 
-      <!-- Recent orders -->
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">◈ Recent Orders</div>
@@ -726,27 +600,15 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Plate</th>
-                <th>Services</th>
-                <th>Amount</th>
-                <th>Payment</th>
-                <th>Agent</th>
-                <th>Time</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Order ID</th><th>Plate</th><th>Services</th><th>Provider</th><th>Amount</th><th>Payment</th><th>Agent</th><th>Time</th><th>Actions</th></tr></thead>
             <tbody id="recentOrdersBody">
-              <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
+              <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ── LIVE FEED ───────────────────────────────────────── -->
     <div class="page" id="page-live">
       <div class="two-col">
         <div class="panel">
@@ -754,9 +616,7 @@
             <div class="panel-title">◉ Activity Stream</div>
             <button class="btn sm danger" onclick="clearFeed()">✕ Clear</button>
           </div>
-          <div class="feed-list" id="activityFeed">
-            <!-- populated by JS -->
-          </div>
+          <div class="feed-list" id="activityFeed"></div>
         </div>
         <div class="panel">
           <div class="panel-header">
@@ -765,9 +625,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr><th>Service</th><th>Order</th><th>Plate</th><th>Since</th><th>Action</th></tr>
-              </thead>
+              <thead><tr><th>Service</th><th>Order</th><th>Plate</th><th>Since</th><th>Action</th></tr></thead>
               <tbody id="unassignedBody">
                 <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>
               </tbody>
@@ -777,47 +635,121 @@
       </div>
     </div>
 
-    <!-- ── ORDERS ──────────────────────────────────────────── -->
     <div class="page" id="page-orders">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">◈ All Orders</div>
           <div class="filters">
-            <input type="text" class="filter-input" placeholder="Search plate…" id="orderSearch" oninput="filterOrders()">
-            <select class="filter-input" id="orderPayFilter" onchange="filterOrders()">
+            <input type="text" class="filter-input" placeholder="Plate / name / phone…" id="orderSearch" oninput="debouncedFilterOrders()" style="width:180px">
+
+            <select class="filter-input" id="orderStatusFilter" onchange="resetAndLoadOrders()">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="assigned">Assigned</option>
+              <option value="accepted">Accepted</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <select class="filter-input" id="orderPayFilter" onchange="resetAndLoadOrders()">
               <option value="">All Payments</option>
               <option value="unpaid">Unpaid</option>
               <option value="partial">Partial</option>
               <option value="paid">Paid</option>
             </select>
-            <input type="date" class="filter-input" id="orderDate" onchange="filterOrders()" value="">
+
+            <select class="filter-input" id="orderSourceFilter" onchange="resetAndLoadOrders()">
+              <option value="">All Sources</option>
+              <option value="agent">Agent</option>
+              <option value="customer_qr">Customer QR</option>
+              <option value="customer_web">Customer Web</option>
+            </select>
+			  
+			<select class="filter-input" id="orderAgentFilter" style="min-width:140px;">
+			  <option value="">All agents</option>
+			  <option value="__customer__">Customer (no agent)</option>
+			</select>
+
+			<input
+			  type="text"
+			  class="filter-input"
+			  id="orderDateRange"
+			  readonly
+			  style="cursor:pointer;min-width:200px">
+
+            <button class="btn sm" onclick="clearOrderFilters()">✕ Clear</button>
           </div>
         </div>
+		<!-- Orders summary stat cards -->
+		<div id="ordersStatGrid" style="padding: 14px 20px 0;">
+		  <div class="stat-card" style="display: none;"><div class="stat-label">Total Orders</div>
+			<div class="stat-value" id="stat-ord-total">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Paid</div>
+			<div class="stat-value" id="stat-ord-paid" style="color:var(--success)">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Unpaid</div>
+			<div class="stat-value" id="stat-ord-unpaid" style="color:var(--danger)">—</div></div>
+		  <div class="stat-card" style="display: none;"><div class="stat-label">Partial</div>
+			<div class="stat-value" id="stat-ord-partial" style="color:var(--warning)">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Completed</div>
+			<div class="stat-value" id="stat-ord-completed" style="color:var(--success)">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Active</div>
+			<div class="stat-value" id="stat-ord-active" style="color:var(--accent)">—</div></div>
+		  <div class="stat-card" style="display: none;"><div class="stat-label">Cancelled</div>
+			<div class="stat-value" id="stat-ord-cancelled" style="color:var(--muted)">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Car Wash</div>
+			<div class="stat-value" id="stat-ord-carwash">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Porter</div>
+			<div class="stat-value" id="stat-ord-porter">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Amount Paid</div>
+			<div class="stat-value" id="stat-ord-amt-paid" style="color:var(--success)">—</div></div>
+		  <div class="stat-card"><div class="stat-label">Amount Unpaid</div>
+			<div class="stat-value" id="stat-ord-amt-unpaid" style="color:var(--danger)">—</div></div>
+		</div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Order ID</th>
                 <th>Plate</th>
-                <th>Location</th>
+                <th>Customer</th>
                 <th>Services</th>
                 <th>Total</th>
                 <th>Paid</th>
-                <th>Status</th>
+                <th>Pay Status</th>
+                <th>Order Status</th>
+                <th>Provider</th>
                 <th>Agent</th>
                 <th>Created</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="ordersBody">
-              <tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
+              <tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Paginator -->
+        <div id="orderPaginator" class="paginator" style="display:none">
+          <div class="paginator-info">
+            <span id="orderPageInfo">—</span>
+          </div>
+          <div class="paginator-controls">
+            <button class="btn sm" id="prevPageBtn" onclick="changeOrderPage(-1)">‹ Prev</button>
+            <span class="page-indicator" id="pageIndicator">Page 1</span>
+            <button class="btn sm" id="nextPageBtn" onclick="changeOrderPage(1)">Next ›</button>
+            <select class="filter-input" id="orderPageSize" onchange="changeOrderPageSize()" style="margin-left:12px">
+              <option value="20">20 / page</option>
+              <option value="30" selected>30 / page</option>
+              <option value="50">50 / page</option>
+              <option value="100">100 / page</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ── PROVIDERS ────────────────────────────────────────── -->
     <div class="page" id="page-providers">
       <div class="panel">
         <div class="panel-header">
@@ -826,32 +758,20 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Active Jobs</th><th>Total Done</th><th>Last Assigned</th><th>Status</th><th>Actions</th></tr>
-            </thead>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Services</th><th>Active Jobs</th><th>Total Done</th><th>Last Assigned</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="providersBody">
-              <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
+              <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ── ASSIGNMENTS ─────────────────────────────────────── -->
     <div class="page" id="page-assignments">
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="stat-card">
-          <div class="stat-label">Pending Assignment</div>
-          <div class="stat-value" id="stat-assign-pending" style="color:var(--warning)">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Awaiting Acceptance</div>
-          <div class="stat-value" id="stat-assign-awaiting" style="color:var(--accent2)">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Timed Out (Need Action)</div>
-          <div class="stat-value" id="stat-assign-timeout" style="color:var(--danger)">—</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Pending Assignment</div><div class="stat-value" id="stat-assign-pending" style="color:var(--warning)">—</div></div>
+        <div class="stat-card"><div class="stat-label">Awaiting Acceptance</div><div class="stat-value" id="stat-assign-awaiting" style="color:var(--accent)">—</div></div>
+        <div class="stat-card"><div class="stat-label">Timed Out (Need Action)</div><div class="stat-value" id="stat-assign-timeout" style="color:var(--danger)">—</div></div>
       </div>
       <div class="panel">
         <div class="panel-header">
@@ -868,9 +788,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr><th>Service</th><th>Order</th><th>Plate</th><th>Provider</th><th>Status</th><th>Assigned At</th><th>Attempts</th><th>Actions</th></tr>
-            </thead>
+            <thead><tr><th>Service</th><th>Order</th><th>Plate</th><th>Provider</th><th>Status</th><th>Assigned At</th><th>Attempts</th><th>Actions</th></tr></thead>
             <tbody id="assignmentsBody">
               <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
             </tbody>
@@ -880,48 +798,80 @@
     </div>
 
     <!-- ── PAYMENTS ─────────────────────────────────────────── -->
-    <div class="page" id="page-payments">
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-        <div class="stat-card">
-          <div class="stat-label">Cash Today</div>
-          <div class="stat-value" id="stat-cash" style="color:var(--accent)">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Card Today</div>
-          <div class="stat-value" id="stat-card" style="color:var(--accent2)">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Online Today</div>
-          <div class="stat-value" id="stat-online" style="color:var(--success)">—</div>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">◆ Payment Ledger</div>
-          <div class="filters">
-            <input type="date" class="filter-input" id="payDate" onchange="loadPayments()">
-            <select class="filter-input" id="payMethod" onchange="loadPayments()">
-              <option value="">All Methods</option>
-              <option value="cash">Cash</option>
-              <option value="card">Card</option>
-              <option value="online">Online</option>
-            </select>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Time</th><th>Order</th><th>Plate</th><th>Method</th><th>Amount</th><th>Ref</th><th>Recorded By</th><th>Status</th></tr>
-            </thead>
-            <tbody id="paymentsBody">
-              <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+	<div class="page" id="page-payments">
+	  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+		<div class="stat-card">
+		  <div class="stat-label">Cash (range)</div>
+		  <div class="stat-value" id="stat-pay-cash"   style="color:var(--accent)">—</div>
+		</div>
+		<div class="stat-card">
+		  <div class="stat-label">Card (range)</div>
+		  <div class="stat-value" id="stat-pay-card"   style="color:var(--accent2)">—</div>
+		</div>
+		<div class="stat-card">
+		  <div class="stat-label">Online (range)</div>
+		  <div class="stat-value" id="stat-pay-online" style="color:var(--success)">—</div>
+		</div>
+	  </div>
 
-    <!-- ── REPORTS ──────────────────────────────────────────── -->
+	  <div class="panel">
+		<div class="panel-header">
+		  <div class="panel-title">◆ Payment Ledger</div>
+		  <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+			  <!-- Date Range Picker (single input, opens popup) -->
+			  <input
+				type="text"
+				class="filter-input"
+				id="payDateRange"
+				readonly
+				style="cursor:pointer;min-width:230px"
+				placeholder="Select date range">
+
+			  <select class="filter-input" id="payMethod" onchange="payOnFilterChange()">
+				<option value="">All Methods</option>
+				<option value="cash">Cash</option>
+				<option value="card">Card</option>
+				<option value="online">Online</option>
+			  </select>
+
+			  <select class="filter-input" id="payStatus" onchange="payOnFilterChange()">
+				<option value="">All Status</option>
+				<option value="success">Success</option>
+				<option value="pending">Pending</option>
+				<option value="failed">Failed</option>
+			  </select>
+
+			  <input type="text" class="filter-input" id="paySearch" placeholder="Plate / Ref / Order…" oninput="payDebouncedSearch()">
+			</div>
+		</div>
+
+		<div class="table-wrap">
+		  <table>
+			<thead>
+			  <tr><th>Time</th><th>Order</th><th>Plate</th><th>Method</th><th>Amount</th><th>Ref</th><th>Recorded By</th><th>Status</th></tr>
+			</thead>
+			<tbody id="paymentsBody">
+			  <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>
+			</tbody>
+		  </table>
+		</div>
+
+		<!-- Pagination -->
+		<div class="pagination" id="payPagination" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border,#2a2a2a);gap:12px;flex-wrap:wrap">
+		  <div style="font-size:12px;color:var(--muted)" id="payPageInfo">—</div>
+		  <div style="display:flex;gap:6px;align-items:center">
+			<select class="filter-input" id="payPerPage" onchange="payOnFilterChange()">
+			  <option value="25">25 / page</option>
+			  <option value="50">50 / page</option>
+			  <option value="100">100 / page</option>
+			</select>
+			<button class="btn sm" id="payPrev" onclick="payGoPage(-1)">‹ Prev</button>
+			<button class="btn sm" id="payNext" onclick="payGoPage(1)">Next ›</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
     <div class="page" id="page-reports">
       <div class="two-col">
         <div class="panel">
@@ -932,9 +882,7 @@
           <div id="dailyReportContent" style="padding:20px;color:var(--muted);text-align:center">Select a date</div>
         </div>
         <div class="panel">
-          <div class="panel-header">
-            <div class="panel-title">◈ Service Breakdown</div>
-          </div>
+          <div class="panel-header"><div class="panel-title">◈ Service Breakdown</div></div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Service</th><th>Count</th><th>Revenue</th><th>Share</th></tr></thead>
@@ -947,7 +895,6 @@
       </div>
     </div>
 
-    <!-- ── SERVICES ─────────────────────────────────────────── -->
     <div class="page" id="page-services">
       <div class="panel">
         <div class="panel-header">
@@ -965,7 +912,6 @@
       </div>
     </div>
 
-    <!-- ── LOCATIONS ────────────────────────────────────────── -->
     <div class="page" id="page-locations">
       <div class="panel">
         <div class="panel-header">
@@ -983,7 +929,6 @@
       </div>
     </div>
 
-    <!-- ── USERS ─────────────────────────────────────────────── -->
     <div class="page" id="page-users">
       <div class="panel">
         <div class="panel-header">
@@ -994,6 +939,7 @@
               <option value="admin">Admin</option>
               <option value="agent">Agent</option>
               <option value="provider">Provider</option>
+              <option value="customer">Customer</option>
             </select>
             <button class="btn primary" onclick="openUserModal('agent')">+ Add User</button>
           </div>
@@ -1009,12 +955,10 @@
       </div>
     </div>
 
-  </div><!-- /content -->
+  </div>
 </main>
 
-<!-- ═══════════════ MODALS ═══════════════ -->
-
-<!-- Order Detail Modal -->
+<!-- MODALS -->
 <div class="modal-overlay" id="orderModal">
   <div class="modal" style="width:600px">
     <div class="modal-header">
@@ -1022,13 +966,10 @@
       <button class="modal-close" onclick="closeModal('orderModal')">✕</button>
     </div>
     <div class="modal-body" id="orderModalBody">Loading…</div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('orderModal')">Close</button>
-    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('orderModal')">Close</button></div>
   </div>
 </div>
 
-<!-- Service Modal -->
 <div class="modal-overlay" id="serviceModal">
   <div class="modal">
     <div class="modal-header">
@@ -1038,29 +979,14 @@
     <div class="modal-body">
       <input type="hidden" id="svcId">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Service Name</label>
-          <input type="text" class="form-input" id="svcName" placeholder="e.g. Full Valet">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Price (₹)</label>
-          <input type="number" class="form-input" id="svcPrice" placeholder="0.00" step="0.01">
-        </div>
+        <div class="form-group"><label class="form-label">Service Name</label><input type="text" class="form-input" id="svcName" placeholder="e.g. Full Valet"></div>
+        <div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="svcPrice" placeholder="0.00" step="0.01"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Duration (min)</label>
-          <input type="number" class="form-input" id="svcDuration" value="30">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Sort Order</label>
-          <input type="number" class="form-input" id="svcSort" value="99">
-        </div>
+        <div class="form-group"><label class="form-label">Duration (min)</label><input type="number" class="form-input" id="svcDuration" value="30"></div>
+        <div class="form-group"><label class="form-label">Sort Order</label><input type="number" class="form-input" id="svcSort" value="99"></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <input type="text" class="form-input" id="svcDesc" placeholder="Short description">
-      </div>
+      <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-input" id="svcDesc" placeholder="Short description"></div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('serviceModal')">Cancel</button>
@@ -1069,7 +995,6 @@
   </div>
 </div>
 
-<!-- Location Modal -->
 <div class="modal-overlay" id="locationModal">
   <div class="modal">
     <div class="modal-header">
@@ -1079,24 +1004,12 @@
     <div class="modal-body">
       <input type="hidden" id="locId">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Code</label>
-          <input type="text" class="form-input" id="locCode" placeholder="A1" maxlength="20">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Zone</label>
-          <input type="text" class="form-input" id="locZone" placeholder="Terminal 1">
-        </div>
+        <div class="form-group"><label class="form-label">Code</label><input type="text" class="form-input" id="locCode" placeholder="A1" maxlength="20"></div>
+        <div class="form-group"><label class="form-label">Zone</label><input type="text" class="form-input" id="locZone" placeholder="Terminal 1"></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Name</label>
-        <input type="text" class="form-input" id="locName" placeholder="Short Stay Car Park">
-      </div>
+      <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input" id="locName" placeholder="Short Stay Car Park"></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Capacity</label>
-          <input type="number" class="form-input" id="locCap" value="0">
-        </div>
+        <div class="form-group"><label class="form-label">Capacity</label><input type="number" class="form-input" id="locCap" value="0"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1106,7 +1019,6 @@
   </div>
 </div>
 
-<!-- User Modal -->
 <div class="modal-overlay" id="userModal">
   <div class="modal">
     <div class="modal-header">
@@ -1116,13 +1028,10 @@
     <div class="modal-body">
       <input type="hidden" id="userId">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input type="text" class="form-input" id="userName" placeholder="John Smith">
-        </div>
+        <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" id="userName" placeholder="John Smith"></div>
         <div class="form-group">
           <label class="form-label">Role</label>
-          <select class="form-input" id="userRole">
+          <select class="form-input" id="userRole" onchange="onUserRoleChange()">
             <option value="agent">Agent</option>
             <option value="provider">Provider</option>
             <option value="admin">Admin</option>
@@ -1130,18 +1039,16 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" class="form-input" id="userEmail" placeholder="user@example.com">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Phone</label>
-          <input type="tel" class="form-input" id="userPhone" placeholder="+91 …">
-        </div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="userEmail" placeholder="user@example.com"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input type="tel" class="form-input" id="userPhone" placeholder="+971 …"></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" class="form-input" id="userPassword" placeholder="Min 8 characters">
+      <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="userPassword" placeholder="Min 8 characters (leave blank to keep existing)"></div>
+      <div class="form-group" id="servicesGroup" style="display:none">
+        <label class="form-label">Services this provider can handle <span style="color:var(--danger)">*</span></label>
+        <div id="userServicesList" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--bg)">
+          <div style="color:var(--muted);font-size:12px">Loading services…</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Tick all services this provider is qualified to perform.</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1151,11 +1058,10 @@
   </div>
 </div>
 
-<!-- Assign Modal -->
 <div class="modal-overlay" id="assignModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Reassign Job</div>
+      <div class="modal-title">Assign Job</div>
       <button class="modal-close" onclick="closeModal('assignModal')">✕</button>
     </div>
     <div class="modal-body">
@@ -1167,9 +1073,7 @@
           <option value="">Loading providers…</option>
         </select>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px">
-        Least-loaded providers shown first.
-      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Only providers tagged for this service are listed, sorted by current load.</div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('assignModal')">Cancel</button>
@@ -1178,18 +1082,53 @@
   </div>
 </div>
 
-<!-- Toasts -->
 <div id="toasts"></div>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-logo">✈ AirVAS</div>
+      <div class="login-sub">Admin Portal</div>
+    </div>
+    <div class="login-field">
+      <label>Email</label>
+      <input id="loginEmail" type="email" placeholder="admin@airportvas.com" autocomplete="email"
+        onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="loginError"></div>
+    <button id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="login-foot">Forgot password? Contact your administrator.</div>
+  </div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════════
-const API = 'https://airportvas.jrjapp.com/api';
+const API = location.origin + '/api';
 let TOKEN = localStorage.getItem('ap_admin_token') || '';
 let currentUser = null;
 let allOrders = [];
 let pollingTimer = null;
+let _servicesCache = null;
+
+// Pagination state for orders
+let _orderPage = 1;
+let _orderTotal = 0;
+let _orderPages = 1;
+const ORDER_PAGE_SIZE_DEFAULT = 30;
+
+// Drop any service worker not scoped to /admin/
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => { if (!r.scope.includes('/admin/')) r.unregister(); });
+  }).catch(()=>{});
+}
 
 // ── HTTP helper ───────────────────────────────────────────────
 async function api(method, path, body = null) {
@@ -1209,7 +1148,6 @@ async function api(method, path, body = null) {
   }
 }
 
-// ─── TOAST ────────────────────────────────────────────────────
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
@@ -1218,7 +1156,43 @@ function toast(msg, type = 'info') {
   setTimeout(() => el.remove(), 3500);
 }
 
-// ─── AUTH ─────────────────────────────────────────────────────
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function escapeAttr(s) {
+  return String(s ?? '').replace(/"/g, '&quot;');
+}
+
+// Truncate a comma-separated list to N visible characters, keep full text in title.
+function trimList(s, max = 24) {
+  if (!s) return '<span style="color:var(--muted);font-style:italic">—</span>';
+  const text = String(s);
+  if (text.length <= max) return escapeHtml(text);
+  return `<span title="${escapeAttr(text)}">${escapeHtml(text.slice(0, max - 1))}…</span>`;
+}
+
+function fmtTime(dt) {
+  if (!dt) return '—';
+  const d = new Date(dt);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60)  return 'Just now';
+  if (diff < 3600) return `${Math.round(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.round(diff/3600)}h ago`;
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+}
+
+// Resolves an image_path value to something usable in <img src>.
+function resolveImageSrc(imagePath) {
+  if (!imagePath) return null;
+  const v = String(imagePath).trim();
+  if (v.startsWith('data:image/')) return v;
+  if (v.startsWith('/uploads/') || v.startsWith('http://') || v.startsWith('https://')) return v;
+  return null;
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
 async function checkAuth() {
   if (!TOKEN) { showLogin(); return; }
   const res = await api('GET', '/auth/me');
@@ -1226,6 +1200,14 @@ async function checkAuth() {
     localStorage.removeItem('ap_admin_token');
     TOKEN = '';
     showLogin();
+    return;
+  }
+  if (res.data.role !== 'admin') {
+    localStorage.removeItem('ap_admin_token');
+    TOKEN = '';
+    showLogin();
+    document.getElementById('loginError').textContent =
+      'This account is a ' + res.data.role + '. Use the ' + res.data.role + ' portal.';
     return;
   }
   currentUser = res.data;
@@ -1266,6 +1248,12 @@ async function doLogin() {
     const json = await res.json();
 
     if (json.token) {
+      if (json.user && json.user.role !== 'admin') {
+        err.textContent = 'This account is a ' + json.user.role + '. Use the ' + json.user.role + ' portal.';
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
+        return;
+      }
       TOKEN = json.token;
       localStorage.setItem('ap_admin_token', TOKEN);
       document.getElementById('loginScreen').style.display = 'none';
@@ -1276,7 +1264,7 @@ async function doLogin() {
       document.getElementById('adminAvatar').textContent = currentUser.name[0].toUpperCase();
       initDashboard();
     } else {
-      err.textContent = json.message || 'Invalid email or password';
+      err.textContent = json.error || json.message || 'Invalid email or password';
       btn.textContent = 'Sign In';
       btn.disabled = false;
     }
@@ -1288,17 +1276,22 @@ async function doLogin() {
 }
 
 function logout() {
+  if (TOKEN) {
+    fetch(API + '/auth/logout', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    }).catch(()=>{});
+  }
   localStorage.removeItem('ap_admin_token');
   TOKEN = '';
   location.reload();
 }
 
-// ─── NAVIGATION ───────────────────────────────────────────────
+// ── NAVIGATION ────────────────────────────────────────────────
 const pageTitles = {
-  dashboard: 'Dashboard',   live: 'Live Feed',
-  orders: 'Orders',         providers: 'Provider Management',
-  assignments: 'Assignment Queue', payments: 'Payments',
-  reports: 'Reports',       services: 'Service Catalogue',
+  dashboard: 'Dashboard', live: 'Live Feed', orders: 'Orders',
+  providers: 'Provider Management', assignments: 'Assignment Queue',
+  payments: 'Payments', reports: 'Reports', services: 'Service Catalogue',
   locations: 'Parking Locations', users: 'Users',
 };
 
@@ -1315,7 +1308,6 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item => {
   item.addEventListener('click', () => showPage(item.dataset.page));
 });
 
-// ─── PAGE DATA LOADERS ────────────────────────────────────────
 function loadPageData(page) {
   switch (page) {
     case 'dashboard':   loadDashboard(); break;
@@ -1336,197 +1328,364 @@ function refreshAll() {
   toast('Refreshed');
 }
 
-// ─── DASHBOARD ────────────────────────────────────────────────
+// ── DASHBOARD ─────────────────────────────────────────────────
+let _weekTrend = [];    // populated by loadDashboard, read by renderChart
+
 async function loadDashboard() {
   const today = new Date().toISOString().slice(0, 10);
-  const res   = await api('GET', `/reports/daily?date=${today}`);
-  if (!res?.data) return;
 
-  const d = res.data.summary;
-  document.getElementById('stat-orders').textContent  = d?.order_count ?? '—';
-  document.getElementById('stat-revenue').textContent = d?.total_revenue ? `₹${parseFloat(d.total_revenue).toLocaleString()}` : '₹0';
-  document.getElementById('stat-cash').textContent    = d?.cash   ? `₹${parseFloat(d.cash).toLocaleString()}`   : '₹0';
-  document.getElementById('stat-card').textContent    = d?.card   ? `₹${parseFloat(d.card).toLocaleString()}`   : '₹0';
-  document.getElementById('stat-online').textContent  = d?.online ? `₹${parseFloat(d.online).toLocaleString()}` : '₹0';
-  document.getElementById('stat-unpaid').textContent  = d?.unpaid_orders ?? '0';
+  // ── Headline + trend (single API call) ──
+  try {
+    const res = await api('GET', `/reports/daily?date=${today}`);
+    const data = res?.data || {};
+    const d    = data.summary || {};
 
-  renderChart();
-  loadRecentOrders();
-  loadProviderLoad();
+    document.getElementById('stat-orders').textContent  = d.order_count   ?? '0';
+    document.getElementById('stat-revenue').textContent = '' + parseFloat(d.total_revenue || 0).toLocaleString();
+    document.getElementById('stat-active').textContent  = d.active_jobs   ?? '0';
+    document.getElementById('stat-unpaid').textContent  = d.unpaid_orders ?? '0';
+
+    // vs-yesterday delta
+    const today_n  = parseInt(d.order_count) || 0;
+    const yest_n   = parseInt(d.yesterday_order_count) || 0;
+    const delta    = today_n - yest_n;
+    const deltaEl  = document.getElementById('stat-orders-delta');
+    if (deltaEl) {
+      deltaEl.textContent = (delta >= 0 ? '+' : '') + delta;
+      deltaEl.className   = delta >= 0 ? 'up' : 'down';
+    }
+
+    _weekTrend = Array.isArray(data.trend) ? data.trend : [];
+    renderChart();
+  } catch (e) {
+    console.warn('Daily report failed', e);
+    renderChart();   // fall through with empty trend so the chart still draws
+  }
+
+  // ── Sibling panels — independent, don't block each other ──
+  loadRecentOrders().catch(e => console.warn('recent orders failed', e));
+  loadProviderLoad().catch(e => console.warn('provider load failed', e));
+  loadLiveFeed().catch(e => console.warn('live feed failed', e));
 }
 
 function initDashboard() {
-  document.getElementById('reportDate').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('payDate').value    = new Date().toISOString().slice(0, 10);
+  const reportDate = document.getElementById('reportDate');
+  if (reportDate) reportDate.value = new Date().toISOString().slice(0, 10);
   loadDashboard();
-  // Live polling every 30s
+  if (pollingTimer) clearInterval(pollingTimer);
   pollingTimer = setInterval(pollLive, 30000);
 }
 
-// ─── CHART (mock 7-day data in demo) ─────────────────────────
-const mockWeekData = [
-  { day: 'Mon', revenue: 8400,  orders: 22 },
-  { day: 'Tue', revenue: 7200,  orders: 18 },
-  { day: 'Wed', revenue: 10100, orders: 27 },
-  { day: 'Thu', revenue: 9300,  orders: 24 },
-  { day: 'Fri', revenue: 13500, orders: 35 },
-  { day: 'Sat', revenue: 15800, orders: 41 },
-  { day: 'Sun', revenue: 11200, orders: 29 },
-];
-
+// ── CHART — now reads live data ───────────────────────────────
 function renderChart() {
+  const chart = document.getElementById('revenueChart');
+  if (!chart) return;
+
+  if (!_weekTrend.length) {
+    chart.innerHTML = '<div style="padding:24px;color:var(--muted);font-size:11px">No data yet</div>';
+    return;
+  }
+
   const mode   = document.getElementById('chartMode')?.value || 'revenue';
-  const values = mockWeekData.map(d => mode === 'revenue' ? d.revenue : d.orders);
-  const maxVal = Math.max(...values);
-  const chart  = document.getElementById('revenueChart');
+  const values = _weekTrend.map(d => mode === 'revenue' ? parseFloat(d.revenue) : parseInt(d.orders));
+  const maxVal = Math.max(1, ...values);   // avoid divide-by-zero on all-zero days
+  const todayStr = new Date().toISOString().slice(0, 10);
 
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
-
-  chart.innerHTML = values.map((v, i) => `
-    <div class="bar-col">
-      <div class="bar-fill ${i === todayIdx ? 'today' : ''}"
-           style="height:${Math.round((v / maxVal) * 140)}px"
-           title="${days[i]}: ${mode === 'revenue' ? '₹' + v.toLocaleString() : v + ' orders'}">
-      </div>
-      <div class="bar-label">${days[i]}</div>
-    </div>
-  `).join('');
+  chart.innerHTML = _weekTrend.map((d, i) => {
+    const isToday = d.day === todayStr;
+    const v       = values[i];
+    const h       = Math.round((v / maxVal) * 140);
+    const title   = mode === 'revenue'
+      ? `${d.label} ${d.day}: ${v.toLocaleString()}`
+      : `${d.label} ${d.day}: ${v} orders`;
+    return `
+      <div class="bar-col">
+        <div class="bar-fill ${isToday ? 'today' : ''}"
+             style="height:${h}px"
+             title="${title}"></div>
+        <div class="bar-label">${d.label}</div>
+      </div>`;
+  }).join('');
 }
 
-// ─── PROVIDER LOAD ────────────────────────────────────────────
+// ── Poll: only refresh the dashboard when it's the active page ──
+async function pollLive() {
+  if (!document.getElementById('page-dashboard')?.classList.contains('active')) return;
+  loadDashboard();
+}
+
 async function loadProviderLoad() {
-  // Demo data
-  const providers = [
-    { name: 'Arjun K.',  jobs: 3, max: 8 },
-    { name: 'Priya S.',  jobs: 5, max: 8 },
-    { name: 'Rahul M.',  jobs: 1, max: 8 },
-    { name: 'Divya R.',  jobs: 7, max: 8 },
-    { name: 'Suresh P.', jobs: 0, max: 8 },
-  ];
+  const el = document.getElementById('providerLoadList');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted)">Loading…</div>';
 
-  document.getElementById('providerLoadList').innerHTML = providers.map(p => `
+  const res = await api('GET', '/providers');
+  const providers = (res?.data || []).filter(p => p.is_active);
+
+  if (!providers.length) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted)">No active providers</div>';
+    return;
+  }
+
+  providers.sort((a, b) => (b.active_jobs || 0) - (a.active_jobs || 0));
+  const top = providers.slice(0, 5);
+  const max = Math.max(8, ...top.map(p => p.active_jobs || 0));
+
+  el.innerHTML = top.map(p => `
     <div class="provider-bar">
-      <div style="width:90px;font-size:11px">${p.name}</div>
+      <div style="width:90px;font-size:11px">${escapeHtml(p.name)}</div>
       <div class="load-bar">
-        <div class="load-fill" style="width:${Math.round((p.jobs/p.max)*100)}%"></div>
+        <div class="load-fill" style="width:${Math.round(((p.active_jobs || 0) / max) * 100)}%"></div>
       </div>
-      <div style="width:40px;text-align:right;font-size:11px;color:var(--muted)">${p.jobs}/${p.max}</div>
+      <div style="width:40px;text-align:right;font-size:11px;color:var(--muted)">${p.active_jobs || 0}/${max}</div>
     </div>
   `).join('');
 }
 
+// ── PROVIDERS ─────────────────────────────────────────────────
 async function loadProviders() {
   loadProviderLoad();
-  // Also populate the providers table
   const body = document.getElementById('providersBody');
   if (!body) return;
 
-  const res = await api('GET', '/provider/jobs?limit=1'); // just testing auth
-  // Demo table
-  const rows = [
-    { name:'Arjun Kumar',   email:'arjun@ap.com',  phone:'9876540001', active:3, done:47, last:'2 min ago', status:1 },
-    { name:'Priya Sharma',  email:'priya@ap.com',  phone:'9876540002', active:5, done:89, last:'8 min ago', status:1 },
-    { name:'Rahul Menon',   email:'rahul@ap.com',  phone:'9876540003', active:1, done:32, last:'1 hr ago',  status:1 },
-    { name:'Divya Raj',     email:'divya@ap.com',  phone:'9876540004', active:7, done:61, last:'4 min ago', status:1 },
-    { name:'Suresh Pillai', email:'suresh@ap.com', phone:'9876540005', active:0, done:15, last:'Yesterday', status:0 },
-  ];
+  body.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>`;
 
-  body.innerHTML = rows.map(r => `
-    <tr>
-      <td>${r.name}</td>
-      <td style="color:var(--muted)">${r.email}</td>
-      <td>${r.phone}</td>
-      <td><span style="color:${r.active>5?'var(--danger)':r.active>2?'var(--warning)':'var(--success)'};font-weight:700">${r.active}</span></td>
-      <td>${r.done}</td>
-      <td style="color:var(--muted)">${r.last}</td>
-      <td><span class="badge ${r.status ? 'completed' : 'cancelled'}">${r.status ? 'Active' : 'Inactive'}</span></td>
-      <td>
-        <button class="btn sm" onclick="toast('Edit provider — coming soon')">Edit</button>
-        <button class="btn sm danger" onclick="toast('Deactivate — coming soon')">Deactivate</button>
-      </td>
-    </tr>
-  `).join('');
+  const res = await api('GET', '/providers');
+  const rows = res?.data || [];
+
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No providers found. Add one above.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows.map(r => {
+    const active = parseInt(r.active_jobs || 0);
+    const color = active > 5 ? 'var(--danger)' : active > 2 ? 'var(--warning)' : 'var(--success)';
+    const services = r.service_names || '<span style="color:var(--muted);font-style:italic">None</span>';
+    return `
+      <tr>
+        <td>${escapeHtml(r.name)}</td>
+        <td style="color:var(--muted)">${escapeHtml(r.email)}</td>
+        <td>${escapeHtml(r.phone || '—')}</td>
+        <td style="font-size:12px;max-width:240px">${escapeHtml(services) === services ? services : escapeHtml(services)}</td>
+        <td><span style="color:${color};font-weight:700">${active}</span></td>
+        <td>${r.total_completed ?? 0}</td>
+        <td style="color:var(--muted)">${r.last_assigned_at ? fmtTime(r.last_assigned_at) : '—'}</td>
+        <td><span class="badge ${r.is_active ? 'completed' : 'cancelled'}">${r.is_active ? 'Active' : 'Inactive'}</span></td>
+        <td>
+          <button class="btn sm" onclick='openUserModal("provider", ${JSON.stringify(r).replace(/'/g,"&#39;")})'>Edit</button>
+          <button class="btn sm danger" onclick="toggleUserActive('${r.id}', ${r.is_active ? 0 : 1})">${r.is_active ? 'Off' : 'On'}</button>
+        </td>
+      </tr>`;
+  }).join('');
 }
 
-// ─── RECENT ORDERS ────────────────────────────────────────────
+// ── RECENT ORDERS (dashboard widget — no pagination) ──────────
 async function loadRecentOrders() {
   const res = await api('GET', '/orders?limit=10');
   const body = document.getElementById('recentOrdersBody');
   if (!body) return;
-
   if (!res?.data?.length) {
-    body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No orders yet today</td></tr>`;
+    body.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No orders yet today</td></tr>`;
     return;
   }
-
   body.innerHTML = res.data.map(o => `
     <tr>
-      <td class="mono" style="color:var(--accent2)">${o.id.slice(0,8)}…</td>
-      <td><strong>${o.vehicle_plate || '—'}</strong></td>
+      <td class="mono" style="color:var(--accent)">#${o.order_number ?? '—'}</td>
+      <td><strong>${escapeHtml(o.vehicle_plate || '—')}</strong></td>
       <td>${o.service_count ?? 0}</td>
-      <td class="mono">₹${parseFloat(o.total_amount||0).toFixed(2)}</td>
+      <td style="font-size:12px">${trimList(o.provider_names)}</td>
+      <td class="mono">${parseFloat(o.total_amount||0).toFixed(2)}</td>
       <td><span class="badge ${o.payment_status}">${o.payment_status}</span></td>
-      <td style="color:var(--muted)">${o.agent_name || '—'}</td>
+      <td style="color:var(--muted)">${escapeHtml(o.agent_name || '—')}</td>
       <td style="color:var(--muted)">${fmtTime(o.created_at)}</td>
-      <td>
-        <button class="btn sm" onclick="viewOrder('${o.id}')">View</button>
-        <button class="btn sm" onclick="openAssignModal('','${o.id}')">Assign</button>
-      </td>
+      <td><button class="btn sm" onclick="viewOrder('${o.id}')">View</button></td>
     </tr>
   `).join('');
 }
 
-// ─── ALL ORDERS ───────────────────────────────────────────────
-async function loadOrders() {
-  const date   = document.getElementById('orderDate')?.value || '';
-  const status = document.getElementById('orderPayFilter')?.value || '';
-  let   qs     = [];
-  if (date)   qs.push(`date=${date}`);
-  if (status) qs.push(`payment_status=${status}`);
+// ── ORDERS LIST (paginated) ───────────────────────────────────
+let _orderFilterTimer = null;
+	
+// ── Orders daterange state ────────────────────────────────────
+const orderDateState = {
+  from: moment().subtract(29, 'days').format('YYYY-MM-DD'),
+  to:   moment().format('YYYY-MM-DD'),
+  initialized: false,
+};
 
-  const res  = await api('GET', `/orders?limit=50${qs.length ? '&' + qs.join('&') : ''}`);
-  allOrders  = res?.data || [];
-  renderOrdersTable(allOrders);
+function orderInitDateRange() {
+  if (orderDateState.initialized) return;
+  orderDateState.initialized = true;
+
+  $('#orderDateRange').daterangepicker({
+    startDate: moment().subtract(29, 'days'),
+    endDate:   moment(),
+    maxDate:   moment().endOf('day'),
+    opens: 'left',
+    alwaysShowCalendars: true,
+    locale: {
+      format: 'YYYY-MM-DD',
+      separator: '  →  ',
+      applyLabel:  'Apply',
+      cancelLabel: 'Clear',
+      firstDay: 1,
+    },
+    ranges: {
+      'Today':         [moment(),                       moment()],
+      'Yesterday':     [moment().subtract(1, 'days'),   moment().subtract(1, 'days')],
+      'Last 7 Days':   [moment().subtract(6, 'days'),   moment()],
+      'Last 30 Days':  [moment().subtract(29, 'days'),  moment()],
+      'This Month':    [moment().startOf('month'),      moment().endOf('month')],
+      'Last Month':    [moment().subtract(1, 'month').startOf('month'),
+                        moment().subtract(1, 'month').endOf('month')],
+    },
+  },
+  function (start, end) {
+    orderDateState.from = start.format('YYYY-MM-DD');
+    orderDateState.to   = end.format('YYYY-MM-DD');
+    _orderPage = 1;
+    loadOrders();
+  });
+
+  // Show the default range in the input on first paint
+  $('#orderDateRange').val(`${orderDateState.from}  →  ${orderDateState.to}`);
 }
 
-function filterOrders() {
-  const search = document.getElementById('orderSearch')?.value?.toLowerCase() || '';
-  const filtered = search
-    ? allOrders.filter(o => (o.vehicle_plate || '').toLowerCase().includes(search))
-    : allOrders;
-  renderOrdersTable(filtered);
+function debouncedFilterOrders() {
+  clearTimeout(_orderFilterTimer);
+  _orderFilterTimer = setTimeout(() => {
+    _orderPage = 1;
+    loadOrders();
+  }, 250);
+}
+
+function resetAndLoadOrders() {
+  _orderPage = 1;
+  loadOrders();
+}
+
+function clearOrderFilters() {
+	document.getElementById('orderSearch').value = '';
+	document.getElementById('orderStatusFilter').value = '';
+	document.getElementById('orderPayFilter').value = '';
+	document.getElementById('orderSourceFilter').value = '';
+	const agentSel = document.getElementById('orderAgentFilter');
+	if (agentSel) agentSel.value = '';        // ← ADD
+
+  // Reset daterange to default (last 30 days)
+  const from = moment().subtract(29, 'days');
+  const to   = moment();
+  orderDateState.from = from.format('YYYY-MM-DD');
+  orderDateState.to   = to.format('YYYY-MM-DD');
+  $('#orderDateRange').val(`${orderDateState.from}  →  ${orderDateState.to}`);
+
+  const picker = $('#orderDateRange').data('daterangepicker');
+  if (picker) {
+    picker.setStartDate(from);
+    picker.setEndDate(to);
+  }
+
+  _orderPage = 1;
+  loadOrders();
+}
+
+async function loadOrders() {
+  orderInitDateRange();
+  loadAgentsForFilter();   // no-op after first call
+
+  const pageSize = parseInt(document.getElementById('orderPageSize')?.value || ORDER_PAGE_SIZE_DEFAULT);
+  const qs = buildOrdersQueryString(true);
+
+  const body = document.getElementById('ordersBody');
+  body.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>`;
+
+  const res = await api('GET', `/orders?${qs}`);
+  allOrders   = res?.data || [];
+  _orderTotal = res?.total ?? allOrders.length;
+  _orderPages = res?.pages ?? Math.max(1, Math.ceil(_orderTotal / pageSize));
+
+  renderOrdersTable(allOrders);
+  renderOrderPaginator();
+  loadOrderSummary();
 }
 
 function renderOrdersTable(orders) {
   const body = document.getElementById('ordersBody');
   if (!body) return;
-
   if (!orders.length) {
-    body.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted)">No orders found</td></tr>`;
+    body.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--muted)">No orders found</td></tr>`;
     return;
   }
-
   body.innerHTML = orders.map(o => `
     <tr>
-      <td class="mono" style="color:var(--accent2)">${o.id.slice(0,8)}…</td>
-      <td><strong>${o.vehicle_plate || '—'}</strong></td>
-      <td style="color:var(--muted)">${o.location_name || '—'}</td>
+      <td class="mono" style="color:var(--accent)">#${o.order_number ?? '—'}</td>
+      <td><strong>${escapeHtml(o.vehicle_plate || '—')}</strong></td>
+      <td style="color:var(--muted)">${escapeHtml(o.customer_name || '—')}${o.customer_phone ? '<br><span style="font-size:11px">' + escapeHtml(o.customer_phone) + '</span>' : ''}</td>
       <td>${o.service_count ?? 0}</td>
-      <td class="mono">₹${parseFloat(o.total_amount||0).toFixed(2)}</td>
-      <td class="mono" style="color:var(--success)">₹${parseFloat(o.paid_amount||0).toFixed(2)}</td>
+      <td class="mono">${parseFloat(o.total_amount||0).toFixed(2)}</td>
+      <td class="mono" style="color:var(--success)">${parseFloat(o.paid_amount||0).toFixed(2)}</td>
       <td><span class="badge ${o.payment_status}">${o.payment_status}</span></td>
-      <td style="color:var(--muted)">${o.agent_name || 'Customer'}</td>
+      <td><span class="badge ${o.order_status}">${formatStatus(o.order_status)}</span></td>
+      <td style="font-size:12px">${trimList(o.provider_names)}</td>
+      <td style="color:var(--muted)">${escapeHtml(o.agent_name || 'Customer')}</td>
       <td style="color:var(--muted)">${fmtTime(o.created_at)}</td>
-      <td>
-        <button class="btn sm" onclick="viewOrder('${o.id}')">View</button>
-        <button class="btn sm" onclick="openAssignModal('','${o.id}')">Assign</button>
-      </td>
+      <td><button class="btn sm" onclick="viewOrder('${o.id}')">View</button></td>
     </tr>
   `).join('');
 }
 
-// ─── ORDER DETAIL ─────────────────────────────────────────────
+function renderOrderPaginator() {
+  const paginator = document.getElementById('orderPaginator');
+  if (!paginator) return;
+
+  if (_orderTotal === 0) {
+    paginator.style.display = 'none';
+    return;
+  }
+
+  paginator.style.display = 'flex';
+
+  const pageSize = parseInt(document.getElementById('orderPageSize')?.value || ORDER_PAGE_SIZE_DEFAULT);
+  const from = ((_orderPage - 1) * pageSize) + 1;
+  const to   = Math.min(_orderPage * pageSize, _orderTotal);
+
+  document.getElementById('orderPageInfo').innerHTML =
+    `Showing <strong>${from}</strong> – <strong>${to}</strong> of <strong>${_orderTotal}</strong> orders`;
+  document.getElementById('pageIndicator').textContent =
+    `Page ${_orderPage} of ${_orderPages}`;
+
+  document.getElementById('prevPageBtn').disabled = (_orderPage <= 1);
+  document.getElementById('nextPageBtn').disabled = (_orderPage >= _orderPages);
+}
+
+function changeOrderPage(delta) {
+  const newPage = _orderPage + delta;
+  if (newPage < 1 || newPage > _orderPages) return;
+  _orderPage = newPage;
+  loadOrders();
+  // Scroll back to top of the orders panel so the user sees the new page
+  document.getElementById('page-orders')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function changeOrderPageSize() {
+  _orderPage = 1;
+  loadOrders();
+}
+
+function formatStatus(s) {
+  return ({
+    pending:     'Pending',
+    assigned:    'Assigned',
+    accepted:    'Accepted',
+    in_progress: 'In Progress',
+    completed:   'Completed',
+    cancelled:   'Cancelled',
+    rejected:    'Rejected',
+  })[s] || s || '—';
+}
+
+// ── ORDER DETAIL MODAL ────────────────────────────────────────
 async function viewOrder(id) {
   document.getElementById('orderModal').classList.add('open');
   document.getElementById('orderModalBody').innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">Loading…</div>';
@@ -1538,34 +1697,57 @@ async function viewOrder(id) {
   }
 
   const o = res.data;
-  const services = (o.services || []).map(s => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-weight:600">${s.service_name}</div>
-        <div style="font-size:11px;color:var(--muted)">Provider: ${s.provider_name || 'Unassigned'}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="badge ${s.status}">${s.status}</span>
-        <span class="mono" style="font-size:12px">₹${parseFloat(s.price||0).toFixed(2)}</span>
-        <button class="btn sm" onclick="openAssignModal('${s.id}','${o.id}')">Reassign</button>
-      </div>
-    </div>
-  `).join('');
+  const assignable = ['pending','assigned','accepted','rejected'];
+
+  const services = (o.services || []).map(s => {
+    const canAssign = assignable.includes(s.status);
+    const label = s.provider_id ? 'Reassign' : 'Assign';
+    const photoSrc = resolveImageSrc(s.image_path);
+    const photoHtml = photoSrc
+      ? `<img src="${escapeAttr(photoSrc)}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border)" onclick="window.open('${escapeAttr(photoSrc)}','_blank')" alt="" onerror="this.style.display='none'">`
+      : '';
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);gap:12px">
+        ${photoHtml}
+        <div style="flex:1">
+          <div style="font-weight:600">${escapeHtml(s.service_name)}</div>
+          <div style="font-size:11px;color:var(--muted)">Provider: ${escapeHtml(s.provider_name || 'Unassigned')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge ${s.status}">${s.status}</span>
+          <span class="mono" style="font-size:12px">${parseFloat(s.price||0).toFixed(2)}</span>
+          ${canAssign ? `<button class="btn sm" onclick="openAssignModal('${s.id}','${o.id}')">${label}</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
 
   const payments = (o.payments || []).map(p => `
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="color:var(--muted)">${fmtTime(p.created_at)} · ${p.method}</span>
-      <span class="mono" style="color:var(--success)">₹${parseFloat(p.amount||0).toFixed(2)}</span>
+      <span style="color:var(--muted)">${fmtTime(p.created_at)} · ${escapeHtml(p.method || p.payment_method || '')}</span>
+      <span class="mono" style="color:var(--success)">${parseFloat(p.amount||0).toFixed(2)}</span>
     </div>
   `).join('');
-
+	
+	const modalTitle = document.querySelector('#orderModal .modal-title');
+	if (modalTitle) modalTitle.textContent = `Order #${o.order_number ?? '—'}`;
+	
+	const paidBanner = o.payment_status === 'paid'
+	  ? ''
+	  : `<div style="background:rgba(217,119,6,0.10);border:1px solid rgba(217,119,6,0.3);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--warning)">
+		   ⚠ Order is <strong>${o.payment_status}</strong>. Services will be auto-assigned once payment is fully received.
+		 </div>`;
+	
   document.getElementById('orderModalBody').innerHTML = `
+  	${paidBanner}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;font-size:12px">
-      <div><span style="color:var(--muted)">Plate: </span><strong>${o.vehicle_plate}</strong></div>
-      <div><span style="color:var(--muted)">Total: </span><strong class="mono">₹${parseFloat(o.total_amount||0).toFixed(2)}</strong></div>
-      <div><span style="color:var(--muted)">Paid: </span><strong class="mono" style="color:var(--success)">₹${parseFloat(o.paid_amount||0).toFixed(2)}</strong></div>
-      <div><span style="color:var(--muted)">Status: </span><span class="badge ${o.payment_status}">${o.payment_status}</span></div>
-      <div><span style="color:var(--muted)">Agent: </span>${o.agent_name || 'Customer'}</div>
+      <div><span style="color:var(--muted)">Plate: </span><strong>${escapeHtml(o.vehicle_plate || '—')}</strong></div>
+      <div><span style="color:var(--muted)">Order Status: </span><span class="badge ${o.order_status || 'pending'}">${formatStatus(o.order_status)}</span></div>
+      <div><span style="color:var(--muted)">Total: </span><strong class="mono">${parseFloat(o.total_amount||0).toFixed(2)}</strong></div>
+      <div><span style="color:var(--muted)">Paid: </span><strong class="mono" style="color:var(--success)">${parseFloat(o.paid_amount||0).toFixed(2)}</strong></div>
+      <div><span style="color:var(--muted)">Pay Status: </span><span class="badge ${o.payment_status}">${o.payment_status}</span></div>
+      <div><span style="color:var(--muted)">Source: </span>${escapeHtml(o.source || '—')}</div>
+      <div><span style="color:var(--muted)">Customer: </span>${escapeHtml(o.customer_name || '—')}${o.customer_phone ? ' · ' + escapeHtml(o.customer_phone) : ''}</div>
+      <div><span style="color:var(--muted)">Agent: </span>${escapeHtml(o.agent_name || 'Customer')}</div>
       <div><span style="color:var(--muted)">Created: </span>${fmtTime(o.created_at)}</div>
     </div>
     <div style="font-family:var(--font-head);font-size:12px;font-weight:700;margin:12px 0 6px;color:var(--muted)">SERVICES</div>
@@ -1575,19 +1757,27 @@ async function viewOrder(id) {
   `;
 }
 
-// ─── ASSIGNMENTS ──────────────────────────────────────────────
+// ── ASSIGNMENTS ───────────────────────────────────────────────
 async function loadAssignments() {
-  const status = document.getElementById('assignFilter')?.value || 'pending,assigned';
-  const res    = await api('GET', `/provider/jobs?status=${status}&limit=50`);
-  const body   = document.getElementById('assignmentsBody');
+  const body = document.getElementById('assignmentsBody');
   if (!body) return;
+  body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>`;
 
-  const items = res?.data || [];
-  document.getElementById('stat-assign-pending')?.textContent !== undefined &&
-    (document.getElementById('stat-assign-pending').textContent = items.filter(i=>i.status==='pending').length);
-  document.getElementById('stat-assign-awaiting')?.textContent !== undefined &&
-    (document.getElementById('stat-assign-awaiting').textContent = items.filter(i=>i.status==='assigned').length);
+  const status = document.getElementById('assignFilter')?.value || 'pending,assigned';
 
+  // Fetch list + accurate stats in parallel
+  const [listRes, statsRes] = await Promise.all([
+    api('GET', `/provider/jobs?status=${status}&limit=50`),
+    api('GET', '/admin/assignment-stats'),
+  ]);
+
+  // Stat cards from the full DB-side counts (not page-bounded)
+  const stats = statsRes?.data || {};
+  setStat('stat-assign-pending',  stats.pending  ?? 0);
+  setStat('stat-assign-awaiting', stats.awaiting ?? 0);
+  setStat('stat-assign-timeout',  stats.timed_out ?? 0);
+
+  const items = listRes?.data || [];
   if (!items.length) {
     body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No items</td></tr>`;
     return;
@@ -1595,59 +1785,184 @@ async function loadAssignments() {
 
   body.innerHTML = items.map(s => `
     <tr>
-      <td>${s.service_name}</td>
-      <td class="mono" style="color:var(--accent2)">${(s.order_id||'').slice(0,8)}…</td>
-      <td><strong>${s.vehicle_plate || '—'}</strong></td>
-      <td>${s.provider_name || '<span style="color:var(--muted)">Unassigned</span>'}</td>
-      <td><span class="badge ${s.status}">${s.status}</span></td>
+      <td>${escapeHtml(s.service_name)}</td>
+      <td class="mono" style="color:var(--accent)">#${s.order_number ?? '—'}</td>
+      <td><strong>${escapeHtml(s.vehicle_plate || '—')}</strong></td>
+      <td>${s.provider_name ? escapeHtml(s.provider_name) : '<span style="color:var(--muted)">Unassigned</span>'}</td>
+      <td><span class="badge ${s.status}">${formatStatus(s.status)}</span></td>
       <td style="color:var(--muted)">${s.assigned_at ? fmtTime(s.assigned_at) : '—'}</td>
-      <td>—</td>
-      <td><button class="btn sm" onclick="openAssignModal('${s.id}','${s.order_id}')">Reassign</button></td>
+      <td>${s.assign_attempts ?? 0}</td>
+      <td><button class="btn sm" onclick="openAssignModal('${s.id}','${s.order_id}')">${s.provider_id ? 'Reassign' : 'Assign'}</button></td>
     </tr>
   `).join('');
+}
+
+function setStat(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+async function triggerCronTimeout() {
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⟳ Processing…'; }
+
+  const res = await api('POST', '/cron/process-timeouts');
+
+  if (btn) { btn.disabled = false; btn.textContent = '⟳ Process Timeouts'; }
+
+  if (res?.success) {
+    const n = res.data?.processed ?? 0;
+    toast(n > 0 ? `Reassigned ${n} timed-out job${n>1?'s':''}` : 'No timed-out jobs to process', 'success');
+    loadAssignments();
+  } else {
+    toast(res?.error || 'Failed to process timeouts', 'error');
+  }
 }
 
 // ─── PAYMENTS PAGE ────────────────────────────────────────────
+const payState = {
+  page: 1,
+  totalPages: 1,
+  from: moment().subtract(29, 'days').format('YYYY-MM-DD'),
+  to:   moment().format('YYYY-MM-DD'),
+  initialized: false,
+};
+
+function payFmtTime(s) {
+  if (!s) return '—';
+  return moment.utc(s).local().format('YYYY-MM-DD HH:mm');
+}
+
+function payInitDateRange() {
+  if (payState.initialized) return;
+  payState.initialized = true;
+
+  $('#payDateRange').daterangepicker({
+    startDate: moment().subtract(29, 'days'),
+    endDate:   moment().endOf('day'),
+    maxDate:   moment().endOf('day'),
+    opens: 'left',
+    alwaysShowCalendars: true,
+    locale: {
+      format: 'YYYY-MM-DD',
+      separator: '  →  ',
+      applyLabel:  'Apply',
+      cancelLabel: 'Clear',
+      firstDay: 1,
+    },
+    ranges: {
+      'Today':         [moment(),                       moment()],
+      'Yesterday':     [moment().subtract(1, 'days'),   moment().subtract(1, 'days')],
+      'Last 7 Days':   [moment().subtract(6, 'days'),   moment()],
+      'Last 30 Days':  [moment().subtract(29, 'days'),  moment()],
+      'This Month':    [moment().startOf('month'),      moment().endOf('month')],
+      'Last Month':    [moment().subtract(1, 'month').startOf('month'),
+                        moment().subtract(1, 'month').endOf('month')],
+    },
+  },
+  function (start, end) {
+    payState.from = start.format('YYYY-MM-DD');
+    payState.to   = end.format('YYYY-MM-DD');
+    payState.page = 1;
+    loadPayments();
+  });
+
+  // Initial label
+  $('#payDateRange').val(`${payState.from}  →  ${payState.to}`);
+}
+
+function payOnFilterChange() {
+  payState.page = 1;
+  loadPayments();
+}
+
+let _paySearchTimer = null;
+function payDebouncedSearch() {
+  clearTimeout(_paySearchTimer);
+  _paySearchTimer = setTimeout(payOnFilterChange, 300);
+}
+
+function payGoPage(delta) {
+  const next = payState.page + delta;
+  if (next < 1 || next > payState.totalPages) return;
+  payState.page = next;
+  loadPayments();
+}
+
 async function loadPayments() {
-  const date   = document.getElementById('payDate')?.value || new Date().toISOString().slice(0,10);
-  const method = document.getElementById('payMethod')?.value || '';
-  const body   = document.getElementById('paymentsBody');
+  payInitDateRange();
+
+  const body = document.getElementById('paymentsBody');
   if (!body) return;
+  body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>`;
 
-  // Demo data
-  const demo = [
-    { time:'09:14', order:'a1b2c3d4', plate:'KL-07-AB-1234', method:'cash',   amount:45, ref:'—',         by:'Arjun', status:'success' },
-    { time:'09:47', order:'e5f6g7h8', plate:'TN-09-CD-5678', method:'card',   amount:15, ref:'CARD****8812',by:'Priya', status:'success' },
-    { time:'10:22', order:'i9j0k1l2', plate:'MH-04-EF-9012', method:'online', amount:80, ref:'PAY_xyz123', by:'System',status:'success' },
-    { time:'11:05', order:'m3n4o5p6', plate:'KL-07-GH-3456', method:'cash',   amount:35, ref:'—',          by:'Rahul', status:'success' },
-    { time:'11:51', order:'q7r8s9t0', plate:'KA-01-IJ-7890', method:'card',   amount:12, ref:'CARD****3321',by:'Divya', status:'success' },
-  ];
+  const q = new URLSearchParams({
+    date_from: payState.from,
+    date_to:   payState.to,
+    method:    document.getElementById('payMethod').value  || '',
+    status:    document.getElementById('payStatus').value  || '',
+    q:         document.getElementById('paySearch').value.trim(),
+    page:      String(payState.page),
+    per_page:  document.getElementById('payPerPage').value || '25',
+  });
 
-  body.innerHTML = demo.map(p => `
+  const res = await api('GET', `/payments?${q.toString()}`);
+  if (!res?.success) {
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--danger)">Failed to load payments</td></tr>`;
+    return;
+  }
+
+  const items = res.data || [];
+  const meta  = res.meta || {};
+
+  // Stat cards reflect the selected range
+  const t = meta.totals || {};
+  document.getElementById('stat-pay-cash').textContent   = '₹' + parseFloat(t.cash   || 0).toLocaleString();
+  document.getElementById('stat-pay-card').textContent   = '₹' + parseFloat(t.card   || 0).toLocaleString();
+  document.getElementById('stat-pay-online').textContent = '₹' + parseFloat(t.online || 0).toLocaleString();
+
+  // Pagination
+  payState.totalPages = meta.total_pages || 1;
+  document.getElementById('payPageInfo').textContent =
+    meta.total
+      ? `Showing page ${meta.page} of ${meta.total_pages} • ${meta.total} payments`
+      : 'No payments in range';
+  document.getElementById('payPrev').disabled = payState.page <= 1;
+  document.getElementById('payNext').disabled = payState.page >= payState.totalPages;
+
+  if (!items.length) {
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No payments found</td></tr>`;
+    return;
+  }
+
+  const methodBadge = m =>
+    m === 'cash' ? 'in_progress' : m === 'card' ? 'assigned' : 'completed';
+  const statusBadge = s =>
+    s === 'success' ? 'completed' : s === 'failed' ? 'rejected' : 'pending';
+
+  body.innerHTML = items.map(p => `
     <tr>
-      <td style="color:var(--muted)">${p.time}</td>
-      <td class="mono" style="color:var(--accent2)">${p.order}…</td>
-      <td><strong>${p.plate}</strong></td>
-      <td><span class="badge ${p.method === 'cash' ? 'in_progress' : p.method === 'card' ? 'assigned' : 'completed'}">${p.method}</span></td>
-      <td class="mono" style="color:var(--success)">₹${p.amount}</td>
-      <td style="color:var(--muted);font-size:11px">${p.ref}</td>
-      <td style="color:var(--muted)">${p.by}</td>
-      <td><span class="badge completed">${p.status}</span></td>
+      <td style="color:var(--muted);font-size:11px">${payFmtTime(p.created_at)}</td>
+      <td class="mono" style="color:var(--accent2)">${p.order_number || '—'}</td>
+      <td><strong>${p.vehicle_plate || '—'}</strong></td>
+      <td><span class="badge ${methodBadge(p.payment_method)}">${p.payment_method}</span></td>
+      <td class="mono" style="color:var(--success)">₹${parseFloat(p.amount).toLocaleString()}</td>
+      <td style="color:var(--muted);font-size:11px">${p.transaction_ref || '—'}</td>
+      <td style="color:var(--muted)">${p.recorded_by_name || 'System'}</td>
+      <td><span class="badge ${statusBadge(p.status)}">${p.status}</span></td>
     </tr>
   `).join('');
 }
 
-// ─── DAILY REPORT ─────────────────────────────────────────────
+// ── DAILY REPORT ──────────────────────────────────────────────
 async function loadDailyReport() {
   const date = document.getElementById('reportDate')?.value || new Date().toISOString().slice(0,10);
   const res  = await api('GET', `/reports/daily?date=${date}`);
   const el   = document.getElementById('dailyReportContent');
-
   if (!res?.data) {
     el.innerHTML = `<div style="color:var(--muted)">No data for ${date}</div>`;
     return;
   }
-
   const d = res.data.summary;
   el.innerHTML = `
     <div style="padding:20px">
@@ -1658,42 +1973,39 @@ async function loadDailyReport() {
         </div>
         <div style="text-align:center">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Revenue</div>
-          <div style="font-family:var(--font-head);font-size:40px;font-weight:800;color:var(--success)">₹${parseFloat(d?.total_revenue||0).toLocaleString()}</div>
+          <div style="font-family:var(--font-head);font-size:40px;font-weight:800;color:var(--success)">${parseFloat(d?.total_revenue||0).toLocaleString()}</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-        <div style="background:var(--surface);border-radius:8px;padding:12px;text-align:center">
+        <div style="background:var(--hover-bg);border-radius:8px;padding:12px;text-align:center">
           <div style="font-size:10px;color:var(--muted)">CASH</div>
-          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--accent)">₹${parseFloat(d?.cash||0).toLocaleString()}</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--accent)">${parseFloat(d?.cash||0).toLocaleString()}</div>
         </div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px;text-align:center">
+        <div style="background:var(--hover-bg);border-radius:8px;padding:12px;text-align:center">
           <div style="font-size:10px;color:var(--muted)">CARD</div>
-          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--accent2)">₹${parseFloat(d?.card||0).toLocaleString()}</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--accent2)">${parseFloat(d?.card||0).toLocaleString()}</div>
         </div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px;text-align:center">
+        <div style="background:var(--hover-bg);border-radius:8px;padding:12px;text-align:center">
           <div style="font-size:10px;color:var(--muted)">ONLINE</div>
-          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--success)">₹${parseFloat(d?.online||0).toLocaleString()}</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--success)">${parseFloat(d?.online||0).toLocaleString()}</div>
         </div>
       </div>
-      <div style="margin-top:12px;background:var(--surface);border-radius:8px;padding:12px;text-align:center">
+      <div style="margin-top:12px;background:var(--hover-bg);border-radius:8px;padding:12px;text-align:center">
         <div style="font-size:10px;color:var(--muted)">UNPAID ORDERS</div>
         <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--danger)">${d?.unpaid_orders ?? 0}</div>
       </div>
     </div>
   `;
-
-  // Service breakdown
   const bBody = document.getElementById('serviceBreakdownBody');
   if (!bBody) return;
   const svcs  = res.data.services || [];
   const total = svcs.reduce((a,b) => a + parseFloat(b.revenue||0), 0);
-
   bBody.innerHTML = svcs.length
     ? svcs.map(s => `
         <tr>
-          <td>${s.name}</td>
+          <td>${escapeHtml(s.name)}</td>
           <td style="text-align:center">${s.count}</td>
-          <td class="mono" style="color:var(--success)">₹${parseFloat(s.revenue||0).toLocaleString()}</td>
+          <td class="mono" style="color:var(--success)">${parseFloat(s.revenue||0).toLocaleString()}</td>
           <td>
             <div style="display:flex;align-items:center;gap:8px">
               <div style="flex:1;height:4px;background:var(--border);border-radius:999px;overflow:hidden">
@@ -1707,27 +2019,26 @@ async function loadDailyReport() {
     : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">No service data</td></tr>`;
 }
 
-// ─── SERVICES ─────────────────────────────────────────────────
+// ── SERVICES ──────────────────────────────────────────────────
 async function loadServices() {
   const res  = await api('GET', '/services');
   const body = document.getElementById('servicesBody');
   if (!body) return;
-
   const svcs = res?.data || [];
+  _servicesCache = svcs;
   if (!svcs.length) {
     body.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No services configured</td></tr>`;
     return;
   }
-
   body.innerHTML = svcs.map(s => `
     <tr>
-      <td>${s.name}</td>
-      <td class="mono">₹${parseFloat(s.price||s.base_price||0).toFixed(2)}</td>
+      <td>${escapeHtml(s.name)}</td>
+      <td class="mono">${parseFloat(s.price||s.base_price||0).toFixed(2)}</td>
       <td>${s.duration_minutes ?? '—'} min</td>
       <td>${s.sort_order ?? '—'}</td>
       <td><span class="badge ${s.is_active ? 'completed' : 'cancelled'}">${s.is_active ? 'Yes' : 'No'}</span></td>
       <td>
-        <button class="btn sm" onclick="editService(${JSON.stringify(s).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="btn sm" onclick='editService(${JSON.stringify(s).replace(/'/g,"&#39;")})'>Edit</button>
       </td>
     </tr>
   `).join('');
@@ -1755,42 +2066,37 @@ async function saveService() {
     sort_order:       parseInt(document.getElementById('svcSort').value),
     description:      document.getElementById('svcDesc').value,
   };
-
   const res = id
     ? await api('PUT', `/services/${id}`, body)
     : await api('POST', '/services', body);
-
   if (res?.success) {
     toast(id ? 'Service updated' : 'Service created', 'success');
     closeModal('serviceModal');
+    _servicesCache = null;
     loadServices();
   } else {
-    toast(res?.message || 'Error saving service', 'error');
+    toast(res?.error || res?.message || 'Error saving service', 'error');
   }
 }
 
-// ─── LOCATIONS ────────────────────────────────────────────────
+// ── LOCATIONS ─────────────────────────────────────────────────
 async function loadLocations() {
   const res  = await api('GET', '/locations');
   const body = document.getElementById('locationsBody');
   if (!body) return;
-
   const locs = res?.data || [];
   if (!locs.length) {
     body.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No locations configured</td></tr>`;
     return;
   }
-
   body.innerHTML = locs.map(l => `
     <tr>
-      <td class="mono" style="color:var(--accent)">${l.code || '—'}</td>
-      <td>${l.name}</td>
-      <td style="color:var(--muted)">${l.zone || '—'}</td>
+      <td class="mono" style="color:var(--accent)">${escapeHtml(l.code || '—')}</td>
+      <td>${escapeHtml(l.name)}</td>
+      <td style="color:var(--muted)">${escapeHtml(l.zone || '—')}</td>
       <td>${l.capacity ?? '—'}</td>
       <td><span class="badge ${l.is_active ? 'completed' : 'cancelled'}">${l.is_active ? 'Yes' : 'No'}</span></td>
-      <td>
-        <button class="btn sm" onclick="editLocation(${JSON.stringify(l).replace(/"/g,'&quot;')})">Edit</button>
-      </td>
+      <td><button class="btn sm" onclick='editLocation(${JSON.stringify(l).replace(/'/g,"&#39;")})'>Edit</button></td>
     </tr>
   `).join('');
 }
@@ -1815,52 +2121,106 @@ async function saveLocation() {
     zone:     document.getElementById('locZone').value,
     capacity: parseInt(document.getElementById('locCap').value),
   };
-
   const res = id
     ? await api('PUT', `/locations/${id}`, body)
     : await api('POST', '/locations', body);
-
   if (res?.success) {
     toast(id ? 'Location updated' : 'Location created', 'success');
     closeModal('locationModal');
     loadLocations();
   } else {
-    toast(res?.message || 'Error saving location', 'error');
+    toast(res?.error || res?.message || 'Error saving location', 'error');
   }
 }
 
-// ─── USERS ────────────────────────────────────────────────────
+// ── USERS ─────────────────────────────────────────────────────
 async function loadUsers() {
   const role = document.getElementById('userRoleFilter')?.value || '';
   const body = document.getElementById('usersBody');
   if (!body) return;
 
-  // Stub — demo data
-  const demo = [
-    { name:'Super Admin',   email:'admin@airpark.in',    phone:'9000000001', role:'admin',    active:1, created:'2024-01-01' },
-    { name:'Arjun Kumar',   email:'arjun@airpark.in',    phone:'9876540001', role:'agent',    active:1, created:'2024-02-10' },
-    { name:'Priya Sharma',  email:'priya@airpark.in',    phone:'9876540002', role:'provider', active:1, created:'2024-02-12' },
-    { name:'Rahul Menon',   email:'rahul@airpark.in',    phone:'9876540003', role:'provider', active:1, created:'2024-03-05' },
-    { name:'Deepa Nair',    email:'deepa@airpark.in',    phone:'9876540010', role:'agent',    active:0, created:'2024-01-20' },
-  ].filter(u => !role || u.role === role);
+  body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Loading…</td></tr>`;
 
-  body.innerHTML = demo.map(u => `
+  const res = await api('GET', `/users${role ? `?role=${role}` : ''}`);
+  const users = res?.data || [];
+
+  if (!users.length) {
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No users found</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = users.map(u => `
     <tr>
-      <td>${u.name}</td>
-      <td style="color:var(--muted)">${u.email}</td>
-      <td>${u.phone}</td>
+      <td>${escapeHtml(u.name)}</td>
+      <td style="color:var(--muted)">${escapeHtml(u.email)}</td>
+      <td>${escapeHtml(u.phone || '—')}</td>
       <td><span class="badge ${u.role}">${u.role}</span></td>
-      <td><span class="badge ${u.active ? 'completed' : 'cancelled'}">${u.active ? 'Yes' : 'No'}</span></td>
-      <td style="color:var(--muted)">${u.created}</td>
+      <td><span class="badge ${u.is_active ? 'completed' : 'cancelled'}">${u.is_active ? 'Yes' : 'No'}</span></td>
+      <td style="color:var(--muted)">${fmtTime(u.created_at)}</td>
       <td>
-        <button class="btn sm" onclick="openUserModal('${u.role}',${JSON.stringify(u).replace(/"/g,'&quot;')})">Edit</button>
-        <button class="btn sm danger" onclick="toast('Reset password — coming soon')">Reset Pwd</button>
+        <button class="btn sm" onclick='openUserModal("${u.role}", ${JSON.stringify(u).replace(/'/g,"&#39;")})'>Edit</button>
+        <button class="btn sm danger" onclick="toggleUserActive('${u.id}', ${u.is_active ? 0 : 1})">${u.is_active ? 'Off' : 'On'}</button>
       </td>
     </tr>
   `).join('');
 }
 
-function openUserModal(role = 'agent', user = null) {
+async function toggleUserActive(id, makeActive) {
+  if (!confirm(makeActive ? 'Activate this user?' : 'Deactivate this user?')) return;
+  const res = makeActive
+    ? await api('PUT', `/users/${id}`, { is_active: 1 })
+    : await api('DELETE', `/users/${id}`);
+  if (res?.success) {
+    toast(makeActive ? 'User activated' : 'User deactivated', 'success');
+    const activePage = document.querySelector('.page.active')?.id;
+    if (activePage === 'page-users')     loadUsers();
+    if (activePage === 'page-providers') loadProviders();
+  } else {
+    toast(res?.error || res?.message || 'Action failed', 'error');
+  }
+}
+
+// ── USER MODAL ────────────────────────────────────────────────
+async function getServices() {
+  if (_servicesCache) return _servicesCache;
+  const res = await api('GET', '/services');
+  _servicesCache = res?.data || [];
+  return _servicesCache;
+}
+
+async function renderServiceCheckboxes(selectedIds = []) {
+  const list = document.getElementById('userServicesList');
+  const svcs = await getServices();
+  if (!svcs.length) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px">No services available. Add one in Services first.</div>';
+    return;
+  }
+  const sel = new Set(selectedIds);
+  list.innerHTML = svcs.map(s => `
+    <label class="svc-check-row">
+      <input type="checkbox" value="${s.id}" ${sel.has(s.id) ? 'checked' : ''}>
+      <span class="svc-name">${escapeHtml(s.name)}</span>
+      <span class="svc-price">${parseFloat(s.price || s.base_price || 0).toFixed(2)}</span>
+    </label>
+  `).join('');
+}
+
+function getCheckedServiceIds() {
+  return Array.from(document.querySelectorAll('#userServicesList input[type="checkbox"]:checked'))
+    .map(cb => cb.value);
+}
+
+function onUserRoleChange() {
+  const role = document.getElementById('userRole').value;
+  document.getElementById('servicesGroup').style.display =
+    role === 'provider' ? 'block' : 'none';
+  if (role === 'provider') {
+    const current = getCheckedServiceIds();
+    renderServiceCheckboxes(current);
+  }
+}
+
+async function openUserModal(role = 'agent', user = null) {
   document.getElementById('userModalTitle').textContent = user ? 'Edit User' : 'Add User';
   document.getElementById('userId').value    = user?.id || '';
   document.getElementById('userName').value  = user?.name || '';
@@ -1868,142 +2228,224 @@ function openUserModal(role = 'agent', user = null) {
   document.getElementById('userPhone').value = user?.phone || '';
   document.getElementById('userRole').value  = user?.role || role;
   document.getElementById('userPassword').value = '';
+
+  let selectedServiceIds = [];
+  if (user) {
+    if (Array.isArray(user.service_ids))    selectedServiceIds = user.service_ids;
+    else if (Array.isArray(user.services))  selectedServiceIds = user.services.map(s => s.id);
+  }
+
+  await renderServiceCheckboxes(selectedServiceIds);
+  onUserRoleChange();
+
   document.getElementById('userModal').classList.add('open');
 }
 
 async function saveUser() {
+  const id   = document.getElementById('userId').value;
+  const role = document.getElementById('userRole').value;
   const body = {
-    name:     document.getElementById('userName').value,
-    email:    document.getElementById('userEmail').value,
-    phone:    document.getElementById('userPhone').value,
-    role:     document.getElementById('userRole').value,
+    name:     document.getElementById('userName').value.trim(),
+    email:    document.getElementById('userEmail').value.trim(),
+    phone:    document.getElementById('userPhone').value.trim(),
+    role:     role,
     password: document.getElementById('userPassword').value,
   };
+
+  if (role === 'provider') {
+    const svcIds = getCheckedServiceIds();
+    if (!svcIds.length) {
+      toast('Select at least one service for the provider', 'error');
+      return;
+    }
+    body.services = svcIds;
+  }
+
   if (!body.name || !body.email) { toast('Name and email required', 'error'); return; }
-  toast('User saved (stub — wire to POST /api/users)', 'success');
-  closeModal('userModal');
-  loadUsers();
-}
+  if (!id && (!body.password || body.password.length < 8)) {
+    toast('Password must be at least 8 characters', 'error');
+    return;
+  }
+  if (id && !body.password) delete body.password;
 
-// ─── ASSIGN MODAL ─────────────────────────────────────────────
-async function openAssignModal(svcId, orderId) {
-  document.getElementById('assignSvcId').value   = svcId;
-  document.getElementById('assignOrderId').value  = orderId;
-  document.getElementById('assignModal').classList.add('open');
+  const res = id
+    ? await api('PUT', `/users/${id}`, body)
+    : await api('POST', '/users', body);
 
-  // Load providers sorted by load
-  const res  = document.getElementById('assignProviderId');
-  res.innerHTML = '<option value="">Loading…</option>';
-
-  // Demo providers
-  const providers = [
-    { id:'p1', name:'Rahul Menon (0 active)',   jobs:0 },
-    { id:'p2', name:'Arjun Kumar (3 active)',   jobs:3 },
-    { id:'p3', name:'Priya Sharma (5 active)',  jobs:5 },
-    { id:'p4', name:'Divya Raj (7 active)',     jobs:7 },
-  ];
-
-  res.innerHTML = providers.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-}
-
-async function submitAssign() {
-  const svcId     = document.getElementById('assignSvcId').value;
-  const orderId   = document.getElementById('assignOrderId').value;
-  const providerId = document.getElementById('assignProviderId').value;
-
-  if (!providerId) { toast('Select a provider', 'error'); return; }
-  if (!svcId && !orderId) { toast('No job selected', 'error'); return; }
-
-  const endpoint = svcId
-    ? `/orders/${orderId}/services/${svcId}/assign`
-    : `/orders/${orderId}/services/auto/assign`;
-
-  const res = await api('PATCH', endpoint, { provider_id: providerId });
-  if (res?.success) {
-    toast('Job assigned successfully', 'success');
-    closeModal('assignModal');
+  if (res?.success || res?.data) {
+    toast(id ? 'User updated' : 'User created', 'success');
+    closeModal('userModal');
+    const activePage = document.querySelector('.page.active')?.id;
+    if (activePage === 'page-users')     loadUsers();
+    if (activePage === 'page-providers') loadProviders();
   } else {
-    toast(res?.message || 'Assignment failed', 'error');
+    toast(res?.error || res?.message || 'Error saving user', 'error');
   }
 }
 
-// ─── LIVE FEED ────────────────────────────────────────────────
-const feedEvents = [
-  { type:'new',      text:'New order #a1b2c3d4 — KL-07-AB-1234',      time:'Just now' },
-  { type:'payment',  text:'₹45 cash payment received for order #e5f6', time:'2 min ago' },
-  { type:'complete', text:'Priya completed Full Valet on MH-04-EF',    time:'5 min ago' },
-  { type:'new',      text:'New order #m3n4o5p6 — TN-09-CD-5678',       time:'8 min ago' },
-  { type:'alert',    text:'Job timed out — reassigning to Rahul',       time:'12 min ago' },
-  { type:'payment',  text:'₹80 online payment for order #i9j0',        time:'22 min ago' },
-];
+// ── ASSIGN MODAL ──────────────────────────────────────────────
+async function openAssignModal(svcId, orderId) {
+  if (!svcId) {
+    toast('Open the order detail and click Assign next to the service', 'error');
+    return;
+  }
 
-function loadLiveFeed() {
+  document.getElementById('assignSvcId').value   = svcId;
+  document.getElementById('assignOrderId').value = orderId || '';
+  document.getElementById('assignModal').classList.add('open');
+
+  const sel = document.getElementById('assignProviderId');
+  sel.innerHTML = '<option value="">Loading eligible providers…</option>';
+
+  const titleEl = document.querySelector('#assignModal .modal-title');
+  if (titleEl) titleEl.textContent = 'Assign Job';
+
+  const res = await api('GET', `/providers/for-service/${svcId}`);
+
+  if (!res?.success) {
+    sel.innerHTML = '<option value="">Error loading providers</option>';
+    toast(res?.error || res?.message || 'Failed to load providers', 'error');
+    return;
+  }
+
+  const providers = res.data || [];
+  const serviceName = res.service_name || 'this service';
+
+  if (titleEl) titleEl.textContent = `Assign: ${serviceName}`;
+
+  if (!providers.length) {
+    sel.innerHTML = `<option value="">No providers configured for ${escapeHtml(serviceName)}</option>`;
+    toast(`No active providers tagged for "${serviceName}". Edit one in Providers to add this service.`, 'error');
+    return;
+  }
+
+  sel.innerHTML = providers.map(p => {
+    const load = `${p.active_jobs} active · ${p.total_completed} done`;
+    return `<option value="${p.id}">${escapeHtml(p.name)} — ${load}</option>`;
+  }).join('');
+}
+
+async function submitAssign() {
+  const svcId      = document.getElementById('assignSvcId').value;
+  const orderId    = document.getElementById('assignOrderId').value;
+  const providerId = document.getElementById('assignProviderId').value;
+
+  if (!providerId) { toast('Select a provider', 'error'); return; }
+  if (!svcId)      { toast('Service ID missing', 'error'); return; }
+  if (!orderId)    { toast('Order ID missing', 'error'); return; }
+
+  const btn = document.querySelector('#assignModal .btn.primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Assigning…'; }
+
+  const res = await api('PATCH', `/orders/${orderId}/services/${svcId}/assign`, {
+    provider_id: providerId,
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Assign'; }
+
+  if (res?.success) {
+    toast('Provider assigned', 'success');
+    closeModal('assignModal');
+
+    if (document.getElementById('orderModal')?.classList.contains('open')) {
+      if (orderId) viewOrder(orderId);
+    }
+    if (typeof loadOrders === 'function')      loadOrders();
+    if (typeof loadAssignments === 'function') loadAssignments();
+  } else {
+    toast(res?.error || res?.message || 'Assignment failed', 'error');
+  }
+}
+
+// ── LIVE FEED — derived from recent orders / payments / completed jobs ──
+async function loadLiveFeed() {
   const el = document.getElementById('activityFeed');
-  el.innerHTML = feedEvents.map(e => `
+  if (!el) return;
+
+  // Pull a few recent items in parallel
+  const [ordersRes, paymentsRes, jobsRes] = await Promise.all([
+    api('GET', '/orders?limit=8'),
+    api('GET', `/payments?date_from=${new Date(Date.now() - 86400000).toISOString().slice(0,10)}` +
+               `&date_to=${new Date().toISOString().slice(0,10)}&per_page=8&page=1`),
+    api('GET', '/provider/jobs?status=completed&limit=8'),
+  ]);
+
+  const events = [];
+
+  (ordersRes?.data || []).forEach(o => events.push({
+    type:  'new',
+    text:  `New order #${o.order_number ?? '—'} · ${o.vehicle_plate || '—'}`,
+    when:  o.created_at,
+  }));
+
+  (paymentsRes?.data || []).forEach(p => events.push({
+    type:  'payment',
+    text:  `₹${parseFloat(p.amount).toLocaleString()} ${p.payment_method} · #${p.order_number ?? '—'}`,
+    when:  p.created_at,
+  }));
+
+  (jobsRes?.data || []).forEach(j => events.push({
+    type:  'complete',
+    text:  `${j.provider_name || 'Provider'} completed ${j.service_name} on ${j.vehicle_plate || '—'}`,
+    when:  j.completed_at,
+  }));
+
+  // Sort newest first, keep top 12
+  events.sort((a, b) => new Date(b.when) - new Date(a.when));
+  const recent = events.slice(0, 12);
+
+  if (!recent.length) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted)">No recent activity</div>';
+    document.getElementById('live-badge').textContent = '0';
+    return;
+  }
+
+  el.innerHTML = recent.map(e => `
     <div class="feed-item">
       <div class="feed-dot ${e.type}"></div>
       <div>
-        <div class="feed-text">${e.text}</div>
-        <div class="feed-time">${e.time}</div>
+        <div class="feed-text">${escapeHtml(e.text)}</div>
+        <div class="feed-time">${fmtTime(e.when)}</div>
       </div>
     </div>
   `).join('');
-  document.getElementById('live-badge').textContent = feedEvents.length;
+  document.getElementById('live-badge').textContent = recent.length;
 }
 
 function clearFeed() {
-  feedEvents.length = 0;
   document.getElementById('activityFeed').innerHTML =
     '<div style="padding:24px;text-align:center;color:var(--muted)">Feed cleared</div>';
   document.getElementById('live-badge').textContent = '0';
 }
 
-async function pollLive() {
-  // In production: poll /api/notifications?since=lastTimestamp
-  // For demo, just refresh stats
-  const today = new Date().toISOString().slice(0, 10);
-  const res   = await api('GET', `/reports/daily?date=${today}`);
-  if (res?.data?.summary) {
-    const d = res.data.summary;
-    document.getElementById('stat-orders').textContent  = d.order_count ?? '—';
-    document.getElementById('stat-revenue').textContent = d.total_revenue ? `₹${parseFloat(d.total_revenue).toLocaleString()}` : '₹0';
-  }
-}
-
 async function loadUnassigned() {
   const body = document.getElementById('unassignedBody');
   if (!body) return;
+  body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">Loading…</td></tr>';
 
-  const demo = [
-    { service:'Basic Wash',  order:'a1b2', plate:'KL-07-AB-1234', since:'3 min ago' },
-    { service:'Tyre Black',  order:'c3d4', plate:'TN-09-CD-5678', since:'7 min ago' },
-    { service:'Air Freshener',order:'e5f6',plate:'MH-04-EF-9012', since:'15 min ago' },
-  ];
+  const res = await api('GET', '/provider/jobs?status=pending&limit=20');
+  const items = res?.data || [];
 
-  body.innerHTML = demo.map(d => `
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">No unassigned jobs</td></tr>';
+    return;
+  }
+
+  body.innerHTML = items.map(s => `
     <tr>
-      <td>${d.service}</td>
-      <td class="mono" style="color:var(--accent2)">${d.order}…</td>
-      <td><strong>${d.plate}</strong></td>
-      <td style="color:var(--warning)">${d.since}</td>
-      <td><button class="btn sm" onclick="openAssignModal('',  '${d.order}')">Assign</button></td>
+      <td>${escapeHtml(s.service_name)}</td>
+	  <td class="mono" style="color:var(--accent)">#${s.order_number ?? '—'}</td>
+      <td><strong>${escapeHtml(s.vehicle_plate || '—')}</strong></td>
+      <td style="color:var(--warning)">${fmtTime(s.created_at || s.assigned_at)}</td>
+      <td><button class="btn sm" onclick="openAssignModal('${s.id}','${s.order_id}')">Assign</button></td>
     </tr>
   `).join('');
 }
 
-// ─── CRON TRIGGER ─────────────────────────────────────────────
-async function triggerCronTimeout() {
-  const res = await api('POST', '/cron/process-timeouts');
-  toast(res?.data ? `Processed ${res.data.processed} timeouts` : 'Done', 'success');
-  loadAssignments();
-}
-
-// ─── NEW ORDER MODAL (stub) ────────────────────────────────────
 function openNewOrderModal() {
   toast('Open Agent PWA to create orders from the field');
 }
 
-// ─── MODAL HELPERS ────────────────────────────────────────────
 function closeModal(id) {
   document.getElementById(id)?.classList.remove('open');
 }
@@ -2013,50 +2455,93 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
     if (e.target === o) o.classList.remove('open');
   });
 });
+	
+// ── Load agents into the dropdown (once) ──
+let _agentsLoaded = false;
+async function loadAgentsForFilter() {
+  if (_agentsLoaded) return;
+  _agentsLoaded = true;
 
-// ─── UTILS ────────────────────────────────────────────────────
-function fmtTime(dt) {
-  if (!dt) return '—';
-  const d = new Date(dt);
-  const now = new Date();
-  const diff = (now - d) / 1000;
-  if (diff < 60)  return 'Just now';
-  if (diff < 3600) return `${Math.round(diff/60)}m ago`;
-  if (diff < 86400) return `${Math.round(diff/3600)}h ago`;
-  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+  const sel = document.getElementById('orderAgentFilter');
+  if (!sel) return;
+
+  if (currentUser?.role !== 'admin') {
+    sel.style.display = 'none';
+    return;
+  }
+
+  const res = await api('GET', '/users/agents');
+  (res?.data || []).forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = a.name;
+    sel.appendChild(opt);
+  });
+
+  sel.addEventListener('change', () => {
+    _orderPage = 1;
+    loadOrders();   // loadOrders() also calls loadOrderSummary() internally
+  });
 }
 
-// ─── INIT ─────────────────────────────────────────────────────
+// ── Load and render the stat cards ──
+async function loadOrderSummary() {
+  const qs = buildOrdersQueryString(/* includePagination */ false);
+  const res = await api('GET', '/orders/summary?' + qs);
+  if (!res?.data) return;
+  const s = res.data;
+
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setVal('stat-ord-total',      s.total_orders);
+  setVal('stat-ord-paid',       s.paid_orders);
+  setVal('stat-ord-unpaid',     s.unpaid_orders);
+  setVal('stat-ord-partial',    s.partial_orders);
+  setVal('stat-ord-completed',  s.completed_orders);
+  setVal('stat-ord-active',     s.active_orders);
+  setVal('stat-ord-cancelled',  s.cancelled_orders);
+  setVal('stat-ord-carwash',    s.carwash_count);
+  setVal('stat-ord-porter',     s.porter_count);
+  setVal('stat-ord-amt-paid',   'AED ' + parseFloat(s.amount_paid).toFixed(2));
+  setVal('stat-ord-amt-unpaid', 'AED ' + parseFloat(s.amount_unpaid).toFixed(2));
+}
+
+// ── Build a query string from current filters (used by both list + summary) ──
+function buildOrdersQueryString(includePagination = true) {
+  const p = new URLSearchParams();
+
+  if (orderDateState.from) p.set('from', orderDateState.from);
+  if (orderDateState.to)   p.set('to',   orderDateState.to);
+
+  const status  = document.getElementById('orderStatusFilter')?.value;
+  const paystat = document.getElementById('orderPayFilter')?.value;
+  const source  = document.getElementById('orderSourceFilter')?.value;
+  const agentId = document.getElementById('orderAgentFilter')?.value;
+  const q       = document.getElementById('orderSearch')?.value?.trim();
+
+  if (status)  p.set('status', status);
+  if (paystat) p.set('payment_status', paystat);
+  if (source)  p.set('source', source);
+  if (q)       p.set('q', q);
+
+  if (agentId === '__customer__') {
+    p.set('no_agent', '1');
+  } else if (agentId) {
+    p.set('created_by', agentId);
+  }
+
+  if (includePagination) {
+    const pageSize = parseInt(document.getElementById('orderPageSize')?.value || ORDER_PAGE_SIZE_DEFAULT);
+    p.set('page',  _orderPage);
+    p.set('limit', pageSize);
+  }
+
+  return p.toString();
+}
+
+// ── BOOT ─────────────────────────────────────────────────────
 loadLiveFeed();
 checkAuth();
 </script>
-
-<!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
-<div id="loginScreen" style="display:flex;position:fixed;inset:0;background:var(--bg);z-index:999;align-items:center;justify-content:center;">
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:380px;max-width:95vw;">
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--accent)">✈ AirPark</div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px">Admin Portal</div>
-    </div>
-    <div style="margin-bottom:16px">
-      <label style="display:block;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Email</label>
-      <input id="loginEmail" type="email" placeholder="admin@airportvas.com"
-        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:10px 14px;border-radius:8px;outline:none;"
-        onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
-    </div>
-    <div style="margin-bottom:8px">
-      <label style="display:block;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Password</label>
-      <input id="loginPass" type="password" placeholder="••••••••"
-        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:10px 14px;border-radius:8px;outline:none;"
-        onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <div id="loginError" style="color:var(--danger);font-size:11px;min-height:18px;margin-bottom:12px"></div>
-    <button id="loginBtn" onclick="doLogin()"
-      style="width:100%;background:var(--accent);border:none;color:#000;font-family:var(--font-head);font-size:14px;font-weight:700;padding:12px;border-radius:8px;cursor:pointer;">
-      Sign In
-    </button>
-  </div>
-</div>
 
 </body>
 </html>
