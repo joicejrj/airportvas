@@ -3,8 +3,8 @@
 
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_NAME', getenv('DB_NAME') ?: 'airport_vas');
-define('DB_USER', getenv('DB_USER') ?: 'airport_vas_user');
-define('DB_PASS', getenv('DB_PASS') ?: 'b2JczD@8zx*Wh5cp');
+define('DB_USER', getenv('DB_USER') ?: 'sdfsdf');
+define('DB_PASS', getenv('DB_PASS') ?: 'dsfsdfsd');
 
 define('APP_SECRET', 'sddffGhr6544Hfgffdf');
 define('SESSION_LIFETIME', 86400 * 7); // 7 days
