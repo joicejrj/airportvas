@@ -1,7 +1,7 @@
 <?php
 
 // Tell OpenSSL where its config file lives (WAMP fix)
-putenv('OPENSSL_CONF=C:\wamp\bin\php\php8.1.31\extras\ssl\openssl.cnf');
+putenv('OPENSSL_CONF=C:\wamp\bin\php\php8.2.18\extras\ssl\openssl.cnf');
 
 require 'vendor/autoload.php';
 

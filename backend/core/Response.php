@@ -5,63 +5,103 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+/**
+ * Centralised JSON response helper.
+ *
+ * Every controller method calls one of:
+ *   Response::success($data, $message)
+ *   Response::error($message, $statusCode, $extra)
+ *   Response::json($payload, $statusCode)
+ *
+ * Each of these terminates the request via exit(), so caller code
+ * doesn't need to "return" anything afterwards.
+ *
+ * Response shape (consistent across all endpoints):
+ *   Success: { "success": true,  "data": …, "message": "…" }
+ *   Error:   { "success": false, "error": "…",  "code": "…" }
+ */
 class Response
 {
-    public static function json(mixed $data, int $status = 200): void
+    /**
+     * Emit a successful response and exit.
+     *
+     * @param mixed       $data    payload (any JSON-encodable value, or null)
+     * @param string|null $message optional human-readable message
+     */
+    public static function success($data = null, ?string $message = null): void
+    {
+        $payload = ['success' => true];
+        if ($data !== null)    $payload['data']    = $data;
+        if ($message !== null) $payload['message'] = $message;
+        self::json($payload, 200);
+    }
+
+    /**
+     * Emit an error response and exit.
+     *
+     * @param string $message  human-readable message shown to the user
+     * @param int    $status   HTTP status code (default 400)
+     * @param array  $extra    extra fields merged into the response (e.g. ['code'=>'ALREADY_TAKEN'])
+     */
+    public static function error(string $message, int $status = 400, array $extra = []): void
+    {
+        $payload = array_merge([
+            'success' => false,
+            'error'   => $message,
+        ], $extra);
+        self::json($payload, $status);
+    }
+
+    /**
+     * Low-level: send any payload as JSON with the given status code, then exit.
+     */
+    public static function json($payload, int $status = 200): void
     {
         if (!headers_sent()) {
-            header('Content-Type: application/json; charset=utf-8');
             http_response_code($status);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Cache-Control: no-store');
+            // CORS (allowed origins set in config.php)
+            $origin = defined('CORS_ALLOWED_ORIGINS') ? CORS_ALLOWED_ORIGINS : '*';
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Access-Control-Allow-Credentials: true');
+            header('Vary: Origin');
         }
-        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        echo json_encode(
+            $payload,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
         exit;
     }
 
-    public static function success(mixed $data = null, string $message = 'OK', int $status = 200): void
+    /**
+     * Send an HTML response (used by the public handover-confirm page).
+     */
+    public static function html(string $html, int $status = 200): void
     {
-        self::json(['success' => true, 'message' => $message, 'data' => $data], $status);
-    }
-
-    public static function error(string $message, int $status = 400, mixed $detail = null): void
-    {
-        self::json(['success' => false, 'error' => $message, 'detail' => $detail], $status);
-    }
-}
-
-// backend/core/Request.php
-// (append to same file or split — kept together for brevity)
-
-class Request
-{
-    private array $body;
-
-    public function __construct()
-    {
-        $raw = file_get_contents('php://input');
-        $this->body = json_decode($raw ?: '{}', true) ?? [];
-    }
-
-    public function input(string $key, mixed $default = null): mixed
-    {
-        return $this->body[$key] ?? $default;
-    }
-
-    public function all(): array
-    {
-        return $this->body;
-    }
-
-    public function file(string $key): ?array
-    {
-        return $_FILES[$key] ?? null;
-    }
-
-    public static function bearerToken(): ?string
-    {
-        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-        if (preg_match('/Bearer\s+(.+)/i', $header, $m)) {
-            return $m[1];
+        if (!headers_sent()) {
+            http_response_code($status);
+            header('Content-Type: text/html; charset=utf-8');
+            header('Cache-Control: no-store');
         }
-        return null;
+        echo $html;
+        exit;
+    }
+
+    /**
+     * Emit a 204 No Content (used for OPTIONS preflight).
+     */
+    public static function noContent(): void
+    {
+        if (!headers_sent()) {
+            http_response_code(204);
+            $origin = defined('CORS_ALLOWED_ORIGINS') ? CORS_ALLOWED_ORIGINS : '*';
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+            header('Access-Control-Max-Age: 86400');
+        }
+        exit;
     }
 }

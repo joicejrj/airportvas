@@ -1,37 +1,40 @@
-Options -Indexes
-Options -MultiViews
+# backend/.htaccess
+#
+# Rewrites every /api/* request to index.php so the Router can dispatch it.
+# Direct file requests (existing files, static assets) bypass the rewrite.
 
-# ── Disable directory browsing ────────────────────────────────────
-Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
 
-# ── Rewrite all requests to index.php ─────────────────────────────
-RewriteEngine On
+    # Don't rewrite real files / directories (CSS, JS, uploaded photos, etc.)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
-# Allow direct access to real files (assets, uploads)
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Route everything else through the PHP front controller
-RewriteRule ^ index.php [L]
-
-# ── Security headers ──────────────────────────────────────────────
-<IfModule mod_headers.c>
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set X-Frame-Options "DENY"
-    Header always set X-XSS-Protection "1; mode=block"
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+    # Everything else -> index.php
+    RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
-# ── PHP settings ──────────────────────────────────────────────────
+# Forward Authorization header to PHP (some setups strip it)
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
+# Reasonable upload limits (override in php.ini for higher)
 <IfModule mod_php.c>
-    php_flag  display_errors    Off
-    php_value upload_max_filesize 10M
-    php_value post_max_size      10M
+    php_value upload_max_filesize 6M
+    php_value post_max_size 8M
 </IfModule>
 
-# ── Disable access to sensitive files ────────────────────────────
-<FilesMatch "\.(env|log|sql|bak|sh)$">
+# Deny access to dotfiles
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Deny access to .php files in subdirectories (only index.php is public)
+<FilesMatch "\.php$">
+    Require all granted
+</FilesMatch>
+<FilesMatch "(config|helpers|controllers|core|middleware)/.*\.php$">
     Require all denied
 </FilesMatch>

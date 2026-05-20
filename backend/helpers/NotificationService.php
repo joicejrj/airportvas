@@ -6,7 +6,20 @@ declare(strict_types=1);
 namespace App\Helpers;
 
 use App\Config\Database;
+use Minishlink\WebPush\WebPush;
+use Minishlink\WebPush\Subscription;
 
+/**
+ * Notification dispatcher.
+ *
+ * Layered delivery, in order:
+ *   1. Web Push (minishlink/web-push) — every device the user has subscribed
+ *   2. Email fallback — if no live push subscription succeeded
+ *   3. SMS — stub for future
+ *
+ * Every call also persists a row in the `notifications` table so the in-app
+ * bell/inbox can show history regardless of whether push reached the device.
+ */
 class NotificationService
 {
     private \PDO $pdo;
@@ -16,134 +29,227 @@ class NotificationService
         $this->pdo = $pdo ?? Database::getInstance();
     }
 
+    /* ─────────────────────────────────────────────────────────────
+     *  PUBLIC API
+     * ─────────────────────────────────────────────────────────── */
+
     /**
-     * Send notification to a user via best available channel.
+     * Send a notification to ONE user.
+     * Logs to `notifications`, pushes to every subscribed device,
+     * falls back to email if no push survives.
      */
     public function notify(string $userId, string $type, array $data): void
     {
-        // Persist notification record
-        $this->pdo->prepare(
-            'INSERT INTO notifications (id, user_id, type, title, body, data, channel, created_at)
-             VALUES (UUID(), ?, ?, ?, ?, ?, "push", UTC_TIMESTAMP())'
-        )->execute([
-            $userId,
-            $type,
-            $data['title'] ?? 'Notification',
-            $data['body']  ?? null,
-            json_encode($data),
-        ]);
+        $notifId = $this->logNotification($userId, $type, $data);
 
-        // Fetch user push token
-        $stmt = $this->pdo->prepare(
-            'SELECT push_token, email, phone FROM users WHERE id = ?'
-        );
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch();
-
-        if (!$user) {
+        if (empty(VAPID_PUBLIC_KEY) || empty(VAPID_PRIVATE_KEY)) {
+            error_log('VAPID keys missing — push skipped, trying email');
+            $this->emailFallback($userId, $data);
             return;
         }
 
-        if ($user['push_token']) {
-            $sent = $this->sendWebPush($user['push_token'], $data);
-            if ($sent) {
-                $this->pdo->prepare(
-                    'UPDATE notifications SET sent_at = UTC_TIMESTAMP() WHERE user_id = ? AND type = ? ORDER BY created_at DESC LIMIT 1'
-                )->execute([$userId, $type]);
-                return;
-            }
+        $subs = $this->getUserSubscriptions($userId);
+        if (!$subs) {
+            $this->emailFallback($userId, $data);
+            return;
         }
 
-        // Fallback: email
-        if ($user['email']) {
-            $this->sendEmail($user['email'], $data['title'], $data['body'] ?? '');
+        $sent = $this->sendWebPush($subs, [
+            'title' => $data['title'] ?? 'Notification',
+            'body'  => $data['body']  ?? '',
+            'type'  => $type,
+            'data'  => $data,
+        ]);
+
+        if ($sent > 0) {
+            $this->pdo->prepare(
+                'UPDATE notifications SET sent_at = UTC_TIMESTAMP() WHERE id = ?'
+            )->execute([$notifId]);
+        } else {
+            $this->emailFallback($userId, $data);
         }
     }
 
-    private function sendWebPush(string $subscriptionJson, array $payload): bool
+    /**
+     * Dispatch a notification tied to an ORDER.
+     * Notifies the assigned provider(s) on that order, and the customer.
+     * Used by accept / start / complete / payment-received flows.
+     *
+     * @return int number of users notified
+     */
+    public function dispatch(string $orderId, string $type, string $message): int
     {
-        $subscription = json_decode($subscriptionJson, true);
-        if (!$subscription || empty($subscription['endpoint'])) {
-            return false;
+        $stmt = $this->pdo->prepare(
+            'SELECT DISTINCT user_id FROM (
+                SELECT os.provider_id AS user_id
+                  FROM order_services os
+                 WHERE os.order_id = ? AND os.provider_id IS NOT NULL
+                UNION
+                SELECT o.customer_id AS user_id
+                  FROM orders o
+                 WHERE o.id = ? AND o.customer_id IS NOT NULL
+             ) t WHERE user_id IS NOT NULL'
+        );
+        $stmt->execute([$orderId, $orderId]);
+
+        $count = 0;
+        while ($row = $stmt->fetch()) {
+            $this->notify($row['user_id'], $type, [
+                'title'    => $this->titleFor($type),
+                'body'     => $message,
+                'order_id' => $orderId,
+            ]);
+            $count++;
         }
-
-        if (empty(VAPID_PUBLIC_KEY) || empty(VAPID_PRIVATE_KEY)) {
-            error_log('VAPID keys not configured — push skipped');
-            return false;
-        }
-
-        // Production: use web-push library (minishlink/web-push)
-        // For standalone: raw VAPID + curl
-        $endpoint = $subscription['endpoint'];
-        $body     = json_encode([
-            'title' => $payload['title'],
-            'body'  => $payload['body'] ?? '',
-            'data'  => $payload,
-            'icon'  => '/icons/icon-192.png',
-            'badge' => '/icons/badge-96.png',
-        ]);
-
-        // Build VAPID JWT (simplified — production use minishlink/web-push)
-        $jwt = $this->buildVapidJwt($endpoint);
-
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: vapid t=' . $jwt . ', k=' . VAPID_PUBLIC_KEY,
-            'TTL: 86400',
-        ];
-
-        if (isset($subscription['keys']['auth'], $subscription['keys']['p256dh'])) {
-            // Encrypt body (use web-push library in production)
-            $headers[] = 'Content-Encoding: aes128gcm';
-        }
-
-        $ch = curl_init($endpoint);
-        curl_setopt_array($ch, [
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $body,
-            CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 5,
-        ]);
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        return $httpCode >= 200 && $httpCode < 300;
-    }
-
-    private function sendEmail(string $to, string $subject, string $body): void
-    {
-        // Production: swap with SendGrid / SES / Mailgun
-        $headers = 'From: noreply@airport-parking.com' . "\r\n";
-        mail($to, $subject, $body, $headers);
+        return $count;
     }
 
     /** Stub: inject SMS API (Twilio, Vonage, etc.) */
     public function sendSms(string $phone, string $message): void
     {
-        // TODO: integrate SMS API
         error_log("SMS to {$phone}: {$message}");
     }
 
-    private function buildVapidJwt(string $endpoint): string
+    /* ─────────────────────────────────────────────────────────────
+     *  INTERNALS
+     * ─────────────────────────────────────────────────────────── */
+
+    private function logNotification(string $userId, string $type, array $data): string
     {
-        // Simplified — use minishlink/web-push in production
-        $parsed = parse_url($endpoint);
-        $audience = $parsed['scheme'] . '://' . $parsed['host'];
+        $id = $this->uuidv4();
+        $this->pdo->prepare(
+            'INSERT INTO notifications (id, user_id, type, title, body, data, channel, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, "push", UTC_TIMESTAMP())'
+        )->execute([
+            $id,
+            $userId,
+            $type,
+            $data['title'] ?? 'Notification',
+            $data['body']  ?? null,
+            json_encode($data, JSON_UNESCAPED_SLASHES),
+        ]);
+        return $id;
+    }
 
-        $header  = base64_encode(json_encode(['typ' => 'JWT', 'alg' => 'ES256']));
-        $payload = base64_encode(json_encode([
-            'aud' => $audience,
-            'exp' => time() + 43200,
-            'sub' => 'mailto:admin@airport-parking.com',
-        ]));
+    /** @return array<int, array{id:int, endpoint:string, p256dh:string, auth:string}> */
+    private function getUserSubscriptions(string $userId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, endpoint, p256dh, auth
+             FROM push_subscriptions
+             WHERE user_id = ?'
+        );
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll() ?: [];
+    }
 
-        // Sign with VAPID private key (omitted — requires openssl with EC key)
-        $sig = '';  // TODO: implement EC signature
+    /**
+     * Send to a list of subscriptions via minishlink/web-push.
+     * Returns the count of successful sends. Deletes dead subscriptions.
+     */
+    private function sendWebPush(array $subs, array $payload): int
+    {
+        try {
+            $webPush = new WebPush([
+                'VAPID' => [
+                    'subject'    => 'mailto:joicekurups@gmail.com',
+                    'publicKey'  => VAPID_PUBLIC_KEY,
+                    'privateKey' => VAPID_PRIVATE_KEY,
+                ],
+            ], [], 5); // 5-second per-request timeout
 
-        return rtrim(strtr($header, '+/', '-_'), '=') . '.'
-             . rtrim(strtr($payload, '+/', '-_'), '=') . '.'
-             . rtrim(strtr(base64_encode($sig), '+/', '-_'), '=');
+            $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
+
+            // endpoint -> row id, for cleanup on 404/410
+            $endpointToRowId = [];
+
+            foreach ($subs as $s) {
+                $sub = Subscription::create([
+                    'endpoint'        => $s['endpoint'],
+                    'publicKey'       => $s['p256dh'],
+                    'authToken'       => $s['auth'],
+                    'contentEncoding' => 'aes128gcm',
+                ]);
+                $endpointToRowId[$s['endpoint']] = $s['id'];
+
+                $webPush->queueNotification($sub, $body, [
+                    'TTL'     => 86400,   // hold for 24h if device offline
+                    'urgency' => 'high',  // wakes the device immediately
+                ]);
+            }
+
+            $success = 0;
+            foreach ($webPush->flush() as $report) {
+                $endpoint = $report->getEndpoint();
+
+                if ($report->isSuccess()) {
+                    $success++;
+                    continue;
+                }
+
+                if ($report->isSubscriptionExpired()) {
+                    // 404 or 410 — browser revoked / uninstalled. Purge.
+                    if (isset($endpointToRowId[$endpoint])) {
+                        $this->pdo->prepare(
+                            'DELETE FROM push_subscriptions WHERE id = ?'
+                        )->execute([$endpointToRowId[$endpoint]]);
+                    }
+                    continue;
+                }
+
+                error_log('Push failed: ' . $report->getReason() . ' for ' . $endpoint);
+            }
+
+            return $success;
+        } catch (\Throwable $e) {
+            error_log('WebPush exception: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    private function emailFallback(string $userId, array $data): void
+    {
+        $stmt = $this->pdo->prepare('SELECT email FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        if (!$user || empty($user['email'])) return;
+
+        $this->sendEmail(
+            $user['email'],
+            $data['title'] ?? 'Notification',
+            $data['body']  ?? ''
+        );
+    }
+
+    private function sendEmail(string $to, string $subject, string $body): void
+    {
+        // Swap with PHPMailer/SMTP for production deliverability.
+        $headers = "From: " . SMTP_FROM . "\r\n"
+                 . "Content-Type: text/plain; charset=utf-8\r\n";
+        @mail($to, $subject, $body, $headers);
+    }
+
+    private function titleFor(string $type): string
+    {
+        switch ($type) {
+            case 'new_assignment':        return 'New job assigned';
+            case 'reassigned':            return 'Job reassigned';
+            case 'job_accepted':          return 'Job accepted';
+            case 'job_started':           return 'Job started';
+            case 'job_completed':         return 'Job completed';
+            case 'job_cancelled':         return 'Job cancelled';
+            case 'assignment_escalation': return '⚠️ Manual assignment needed';
+            case 'payment_received':      return 'Payment received';
+            default:                      return 'Update';
+        }
+    }
+
+    private function uuidv4(): string
+    {
+        $d = random_bytes(16);
+        $d[6] = chr(ord($d[6]) & 0x0f | 0x40);
+        $d[8] = chr(ord($d[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($d), 4));
     }
 }
+?>

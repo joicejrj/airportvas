@@ -5,93 +5,121 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+/**
+ * Lightweight router.
+ *
+ * Register routes with method helpers:
+ *   $router->get('/api/tl/jobs',                [TLController::class, 'jobs']);
+ *   $router->post('/api/tl/orders',             [TLController::class, 'directBook']);
+ *   $router->patch('/api/tl/jobs/{svcId}/accept', [TLController::class, 'accept']);
+ *
+ * Patterns may contain {name} segments — captured values are passed to
+ * the controller method as an associative array:
+ *   public function accept(array $params): void
+ *   { $svcId = $params['svcId']; … }
+ *
+ * Handles OPTIONS preflight automatically (CORS).
+ */
 class Router
 {
+    /** @var array<string, array<string, callable|array>> */
     private array $routes = [];
 
-    public function add(string $method, string $pattern, callable|array $handler): void
+    public function get(string $path, $handler): void    { $this->add('GET',    $path, $handler); }
+    public function post(string $path, $handler): void   { $this->add('POST',   $path, $handler); }
+    public function put(string $path, $handler): void    { $this->add('PUT',    $path, $handler); }
+    public function patch(string $path, $handler): void  { $this->add('PATCH',  $path, $handler); }
+    public function delete(string $path, $handler): void { $this->add('DELETE', $path, $handler); }
+
+    private function add(string $method, string $path, $handler): void
     {
-        $this->routes[] = [
-            'method'  => strtoupper($method),
-            'pattern' => $this->compilePattern($pattern),
-            'handler' => $handler,
-        ];
+        $this->routes[$method][$path] = $handler;
     }
 
-    public function get(string $pattern, callable|array $handler): void
-    {
-        $this->add('GET', $pattern, $handler);
-    }
-
-    public function post(string $pattern, callable|array $handler): void
-    {
-        $this->add('POST', $pattern, $handler);
-    }
-
-    public function put(string $pattern, callable|array $handler): void
-    {
-        $this->add('PUT', $pattern, $handler);
-    }
-
-    public function patch(string $pattern, callable|array $handler): void
-    {
-        $this->add('PATCH', $pattern, $handler);
-    }
-
-    public function delete(string $pattern, callable|array $handler): void
-    {
-        $this->add('DELETE', $pattern, $handler);
-    }
-
+    /**
+     * Dispatch the current request.
+     * Sends a 404 if no route matched; 405 if path matched but method didn't.
+     */
     public function dispatch(): void
     {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
-        // Strip /api prefix if routed via nginx alias
-        $uri = preg_replace('#^/api#', '', $uri) ?: '/';
-
-        // OPTIONS pre-flight
+        // CORS preflight
         if ($method === 'OPTIONS') {
-            http_response_code(204);
-            exit;
+            Response::noContent();
         }
 
-        foreach ($this->routes as $route) {
-            if ($route['method'] !== $method) {
-                continue;
-            }
+        $uri  = (string)($_SERVER['REQUEST_URI'] ?? '/');
+        $path = parse_url($uri, PHP_URL_PATH) ?: '/';
+        $path = '/' . trim($path, '/');
 
-            if (preg_match($route['pattern'], $uri, $matches)) {
-                $params = array_filter(
-                    $matches,
-                    fn($k) => !is_int($k),
-                    ARRAY_FILTER_USE_KEY
-                );
-                $this->invoke($route['handler'], $params);
-                return;
+        // Try the requested method first
+        $matched = $this->match($method, $path);
+        if ($matched) {
+            [$handler, $params] = $matched;
+            $this->invoke($handler, $params);
+            return;
+        }
+
+        // Path exists but wrong method? → 405
+        foreach (['GET','POST','PUT','PATCH','DELETE'] as $m) {
+            if ($m === $method) continue;
+            if ($this->match($m, $path) !== null) {
+                Response::error('Method not allowed', 405);
             }
         }
 
-        Response::json(['error' => 'Not found'], 404);
+        Response::error('Not found', 404);
     }
 
-    private function compilePattern(string $pattern): string
+    /**
+     * Return [handler, params] if a route matches, or null.
+     */
+    private function match(string $method, string $path): ?array
     {
-        // Strip /api prefix from pattern for matching
-        $pattern = preg_replace('#^/api#', '', $pattern) ?: '/';
-        $escaped = preg_quote($pattern, '#');
-        $regex   = preg_replace('#\\\{([a-zA-Z_]+)\\\}#', '(?P<$1>[^/]+)', $escaped);
-        return '#^' . $regex . '$#';
+        if (empty($this->routes[$method])) return null;
+
+        foreach ($this->routes[$method] as $pattern => $handler) {
+            // Fast path: exact match
+            if ($pattern === $path) {
+                return [$handler, []];
+            }
+            // Pattern contains {name}
+            if (str_contains($pattern, '{')) {
+                $regex = '#^' . preg_replace_callback(
+                    '/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/',
+                    fn($m) => '(?P<' . $m[1] . '>[^/]+)',
+                    $pattern
+                ) . '$#';
+                if (preg_match($regex, $path, $matches)) {
+                    // Keep only the named captures
+                    $params = array_filter(
+                        $matches,
+                        fn($k) => is_string($k),
+                        ARRAY_FILTER_USE_KEY
+                    );
+                    return [$handler, $params];
+                }
+            }
+        }
+        return null;
     }
 
-    private function invoke(callable|array $handler, array $params): void
+    /**
+     * Call the handler — supports [ClassName::class, 'method'] or a closure.
+     */
+    private function invoke($handler, array $params): void
     {
+        if (is_array($handler) && count($handler) === 2) {
+            [$class, $method] = $handler;
+            $instance = new $class();
+            $instance->$method($params);
+            return;
+        }
         if (is_callable($handler)) {
             $handler($params);
             return;
         }
-        [$class, $method] = $handler;
-        (new $class())->$method($params);
+        Response::error('Invalid route handler', 500);
     }
 }

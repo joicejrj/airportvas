@@ -13,7 +13,7 @@ const STATIC_ASSETS = [
     '/shared/styles.css',
     '/pwa/db.js',
     '/pwa/sync-engine.js',
-    '/icons/icon-192.png',
+    '/iconspwa/provider-192.png',
     '/icons/icon-512.png',
 ];
 
@@ -153,36 +153,47 @@ async function processSyncQueue() {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 self.addEventListener('push', (event) => {
-    if (!event.data) return;
+    console.log('[SW PUSH] event received!');
+    console.log('[SW PUSH] has data:', !!event.data);
 
-    let data;
-    try {
-        data = event.data.json();
-    } catch {
-        data = { title: 'Airport Parking', body: event.data.text() };
+    if (!event.data) {
+        console.warn('[SW PUSH] event has no data — ignoring');
+        return;
     }
 
+    let payload;
+    try {
+        payload = event.data.json();
+        console.log('[SW PUSH] payload parsed:', payload);
+    } catch (e) {
+        console.warn('[SW PUSH] JSON parse failed:', e);
+        payload = { title: 'Airport Parking', body: event.data.text(), data: {} };
+    }
+
+    const inner = payload.data || {};
+
     const options = {
-        body:    data.body  || '',
-        icon:    '/icons/icon-192.png',
-        badge:   '/icons/badge-96.png',
-        data:    data.data  || {},
-        actions: buildActions(data.type),
-        vibrate: [200, 100, 200],
-        tag:     data.data?.service_id || 'ap-notification',
-        renotify: true,
+        body:      payload.body || '',
+        icon:      '/iconspwa/provider-192.png',
+        badge:     '/icons/badge-96.png',
+        data:      inner,
+        actions:   buildActions(payload.type),
+        vibrate:   [200, 100, 200],
+        tag:       inner.service_id || inner.order_id || 'ap-notification',
+        renotify:  true,
+        requireInteraction: payload.type === 'new_assignment', // sticky until tapped
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title, options)
+        self.registration.showNotification(payload.title || 'Airport Parking', options)
     );
 });
 
 function buildActions(type) {
     if (type === 'new_assignment') {
         return [
-            { action: 'accept', title: 'Accept' },
-            { action: 'reject', title: 'Reject' },
+            { action: 'accept', title: '✓ Accept' },
+            { action: 'reject', title: '✗ Reject' },
         ];
     }
     return [{ action: 'view', title: 'View' }];
@@ -190,52 +201,59 @@ function buildActions(type) {
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    const data    = event.notification.data;
+
+    const data    = event.notification.data || {};
     const action  = event.action;
     const svcId   = data.service_id;
 
     if (action === 'accept' && svcId) {
         event.waitUntil(handleQuickAction(svcId, 'accept'));
-    } else if (action === 'reject' && svcId) {
-        event.waitUntil(handleQuickAction(svcId, 'reject'));
-    } else {
-        // Open provider app
-        event.waitUntil(
-            self.clients.matchAll({ type: 'window' }).then(clients => {
-                const url = data.order_id
-                    ? `/provider/index.html#job/${svcId}`
-                    : '/provider/index.html';
-                if (clients.length > 0) {
-                    clients[0].focus();
-                    clients[0].navigate(url);
-                } else {
-                    self.clients.openWindow(url);
-                }
-            })
-        );
+        return;
     }
+    if (action === 'reject' && svcId) {
+        event.waitUntil(handleQuickAction(svcId, 'reject'));
+        return;
+    }
+
+    // Default: open the relevant page. `data.url` is set by the server.
+    const targetUrl = data.url
+        || (svcId ? `/provider/index.html#job/${svcId}` : '/provider/index.html');
+
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+            // Reuse an existing window if one is already on this origin.
+            for (const c of clients) {
+                if ('focus' in c) {
+                    c.focus();
+                    if ('navigate' in c) c.navigate(targetUrl).catch(() => {});
+                    return;
+                }
+            }
+            return self.clients.openWindow(targetUrl);
+        })
+    );
 });
 
 async function handleQuickAction(serviceId, action) {
-    // Quick accept/reject directly from notification without opening app
-    const { SyncQueue } = await import('/pwa/sync-engine.js');
-    const queue = new SyncQueue();
-
-    await queue.addAction({
-        entity_type: 'service',
-        entity_id:   serviceId,
-        action_type: 'status',
-        payload: {
-            id:     serviceId,
-            status: action === 'accept' ? 'accepted' : 'rejected',
-        },
-    });
-
-    // Attempt immediate sync
+    // Quick accept/reject directly from the notification, without opening the app.
+    // Queues into the offline sync engine so it works even with flaky network.
     try {
-        await processSyncQueue();
-    } catch {
-        // Will sync when online
+        const { SyncQueue } = await import('/pwa/sync-engine.js');
+        const queue = new SyncQueue();
+
+        await queue.addAction({
+            entity_type: 'service',
+            entity_id:   serviceId,
+            action_type: 'status',
+            payload: {
+                id:     serviceId,
+                status: action === 'accept' ? 'accepted' : 'rejected',
+            },
+        });
+
+        try { await processSyncQueue(); } catch { /* will retry */ }
+    } catch (err) {
+        console.error('[SW] quick action failed:', err);
     }
 }
 

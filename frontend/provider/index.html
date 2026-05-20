@@ -271,6 +271,7 @@ body{background:var(--bg);color:var(--text1);font-family:var(--font);min-height:
 
 <div id="toast"></div>
 
+<script src="/provider/push.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 // CONFIG
@@ -347,6 +348,11 @@ async function checkAuth() {
   document.getElementById('provNameDisplay').textContent = currentProvider.name;
   showApp();
   startPolling();
+	
+	// Register for push notifications (best-effort; safe if denied)
+	if (typeof initPushNotifications === 'function') {
+		initPushNotifications(TOKEN).catch(err => console.warn('Push init failed:', err));
+	}
 }
 
 function showLoginScreen() {
@@ -388,6 +394,11 @@ async function doLogin() {
       document.getElementById('provNameDisplay').textContent = currentProvider.name;
       showApp();
       startPolling();
+		
+		if (typeof initPushNotifications === 'function') {
+			initPushNotifications(TOKEN).catch(err => console.warn('Push init failed:', err));
+		}
+		
     } else {
       err.textContent = json.error || json.message || 'Invalid credentials';
       btn.textContent = 'Sign In'; btn.disabled = false;
@@ -400,8 +411,12 @@ async function doLogin() {
 
 function doLogout() {
   clearInterval(pollingTimer);
+  const tokenForCleanup = TOKEN;
   if (TOKEN) {
     fetch(API + '/auth/logout', { method: 'POST', headers: authHeaders() }).catch(()=>{});
+  }
+  if (typeof unsubscribePush === 'function') {
+    unsubscribePush(tokenForCleanup).catch(() => {});
   }
   localStorage.removeItem('ap_provider_token');
   TOKEN = '';

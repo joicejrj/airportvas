@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Order Confirmed — AirVAS</title>
+<title>Payment Confirmation — AirVAS</title>
 <style>
 :root {
   --bg: #f0f6ff; --card: #fff; --accent: #0ea5e9; --accent2: #0284c7;
   --success: #16a34a; --danger: #dc2626; --warning: #d97706;
+  --partial: #f59e0b;
   --text1: #0f172a; --text2: #475569; --text3: #94a3b8; --border: #e2e8f0;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -20,22 +21,38 @@ body { background: var(--bg); color: var(--text1);
 .brand .sub { font-size: 11px; color: var(--text3); letter-spacing: 1.5px;
   text-transform: uppercase; margin-top: 4px; }
 
-.success-banner { background: linear-gradient(135deg, var(--success), #15803d);
-  color: #fff; border-radius: 16px; padding: 28px 20px; text-align: center;
-  margin-bottom: 16px; box-shadow: 0 4px 20px rgba(22,163,74,0.2); }
-.success-banner .icon { font-size: 48px; margin-bottom: 8px; }
-.success-banner h1 { font-size: 22px; font-weight: 800; }
-.success-banner p { font-size: 14px; opacity: 0.9; margin-top: 6px; }
+/* Banner — adapts to payment status (paid / partial / unpaid) */
+.banner { border-radius: 16px; padding: 28px 20px; text-align: center;
+  margin-bottom: 16px; color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.banner .icon { font-size: 48px; margin-bottom: 8px; }
+.banner h1 { font-size: 22px; font-weight: 800; }
+.banner p { font-size: 14px; opacity: 0.92; margin-top: 6px; }
+.banner-paid    { background: linear-gradient(135deg, var(--success), #15803d); }
+.banner-partial { background: linear-gradient(135deg, var(--partial), #b45309); }
+.banner-unpaid  { background: linear-gradient(135deg, var(--warning), #b45309); }
+
+/* Outstanding balance callout — appears for partial/unpaid orders */
+.balance-callout {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px;
+  padding: 14px 16px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.balance-callout .ico { font-size: 24px; flex-shrink: 0; }
+.balance-callout .txt { flex: 1; font-size: 13px; color: #92400e; line-height: 1.4; }
+.balance-callout .txt strong { font-size: 15px; color: #78350f; }
+.balance-callout .amt { font-family: monospace; font-weight: 700; font-size: 18px; color: #b45309; white-space: nowrap; }
 
 .card { background: var(--card); border: 1px solid var(--border);
   border-radius: 14px; padding: 18px; margin-bottom: 14px; }
 .card-title { font-size: 11px; font-weight: 700; color: var(--text2);
   text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
 .info-row { display: flex; justify-content: space-between; padding: 6px 0;
-  border-bottom: 1px solid var(--border); font-size: 14px; }
+  border-bottom: 1px solid var(--border); font-size: 14px; gap: 10px; }
 .info-row:last-child { border-bottom: none; }
-.info-row .lbl { color: var(--text3); }
-.info-row .val { font-weight: 600; }
+.info-row .lbl { color: var(--text3); flex-shrink: 0; }
+.info-row .val { font-weight: 600; text-align: right; }
+.info-row .val-due { color: var(--partial); font-family: monospace; }
+.info-row .val-paid { color: var(--success); }
 
 .ref-box { background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
   border: 1px solid #bae6fd; border-radius: 12px; padding: 16px;
@@ -45,93 +62,40 @@ body { background: var(--bg); color: var(--text1);
 .ref-box .val { font-size: 22px; font-weight: 800; color: var(--accent);
   margin-top: 4px; font-family: monospace; }
 
-/* Tracker */
-.tracker { display: flex; flex-direction: column; gap: 4px; position: relative; }
-.tracker-step {
-  display: flex; align-items: flex-start; gap: 14px; padding: 12px;
-  border-radius: 10px; transition: all .3s; position: relative;
-}
-.tracker-step::before {
-  content: ''; position: absolute; left: 27px; top: 44px;
-  width: 2px; height: calc(100% - 8px); background: var(--border);
-}
-.tracker-step:last-child::before { display: none; }
-.tracker-step.done::before { background: var(--success); }
-.tracker-step.active::before {
-  background: linear-gradient(to bottom, var(--accent), var(--border));
-}
 
-.tracker-step .dot {
-  width: 32px; height: 32px; border-radius: 50%;
+/* Payment history rows */
+.payment-row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.payment-row:last-child { border-bottom: none; }
+.payment-row .pay-icon {
+  width: 36px; height: 36px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; flex-shrink: 0; background: var(--border); color: var(--text3);
-  position: relative; z-index: 1;
+  font-size: 16px; flex-shrink: 0;
 }
-.tracker-step .text { flex: 1; padding-top: 4px; }
-.tracker-step .text .step-title {
-  font-size: 14px; font-weight: 600; color: var(--text3);
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  flex-wrap: wrap;
-}
-.tracker-step .text .step-time {
-  font-size: 11px; color: var(--text3); font-weight: 500;
-  white-space: nowrap;
-}
-.tracker-step .text .step-sub {
-  font-size: 12px; color: var(--text3); margin-top: 3px;
+.payment-row .pay-icon.cash    { background: #dcfce7; color: #166534; }
+.payment-row .pay-icon.card    { background: #dbeafe; color: #1d4ed8; }
+.payment-row .pay-icon.online  { background: #ede9fe; color: #7c3aed; }
+.payment-row .pay-info { flex: 1; min-width: 0; }
+.payment-row .pay-info .pay-method { font-size: 13px; font-weight: 600; color: var(--text1); }
+.payment-row .pay-info .pay-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.payment-row .pay-amount {
+  font-family: monospace; font-weight: 700; font-size: 15px;
+  color: var(--success); white-space: nowrap;
 }
 
-.tracker-step.done { background: rgba(22,163,74,0.05); }
-.tracker-step.done .dot { background: var(--success); color: #fff; }
-.tracker-step.done .text .step-title { color: var(--text1); }
-.tracker-step.done .text .step-time { color: var(--success); font-weight: 600; }
+/* Payment summary footer in the breakdown card */
+.pay-summary {
+  margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--border);
+  display: flex; justify-content: space-between; font-size: 14px;
+}
+.pay-summary .lbl { color: var(--text2); font-weight: 600; }
+.pay-summary .val { font-weight: 700; font-family: monospace; }
 
-.tracker-step.active { background: rgba(14,165,233,0.05); }
-.tracker-step.active .dot {
-  background: var(--accent); color: #fff;
-  animation: pulse 1.5s infinite;
-}
-.tracker-step.active .text .step-title { color: var(--text1); }
-.tracker-step.active .text .step-time { color: var(--accent); font-weight: 600; }
 
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.5); }
-  50% { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
-}
-
-.services-block { margin-top: 6px; padding-left: 0; }
-.svc-row {
-  padding: 8px 12px; background: #f8fafc; border-radius: 8px;
-  margin-bottom: 6px; font-size: 13px; display: flex;
-  align-items: center; justify-content: space-between; gap: 10px;
-}
-.svc-row .svc-name { flex: 1; font-weight: 600; }
-.svc-row .svc-status {
-  font-size: 11px; font-weight: 700; padding: 2px 8px;
-  border-radius: 999px; text-transform: uppercase; white-space: nowrap;
-}
-.svc-status.pending { background: #fef3c7; color: #92400e; }
-.svc-status.assigned { background: #e0f2fe; color: #0284c7; }
-.svc-status.accepted { background: #dbeafe; color: #1d4ed8; }
-.svc-status.in_progress { background: #ede9fe; color: #7c3aed; }
-.svc-status.completed { background: #dcfce7; color: #166534; }
-.svc-row .svc-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
-
-.refresh-note { font-size: 12px; color: var(--text3); text-align: center;
-  padding: 12px; }
-.refresh-note .spin {
-  display: inline-block; animation: spin 1.5s linear infinite;
-}
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-.share-box { background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-.share-box .label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
-.share-url { font-size: 11px; word-break: break-all; color: var(--accent2);
-  background: #f8fafc; padding: 8px 10px; border-radius: 6px; font-family: monospace; }
-.copy-btn { width: 100%; background: var(--accent); border: none; color: #fff;
-  padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
-  cursor: pointer; margin-top: 8px; }
 
 #errorScreen, #loadingScreen { text-align: center; padding: 60px 20px; }
 .error-icon { font-size: 56px; }
@@ -143,7 +107,7 @@ body { background: var(--bg); color: var(--text1);
 
 <div class="brand">
   <div class="logo">✈ AirVAS</div>
-  <div class="sub">Order Tracking</div>
+  <div class="sub">Payment receipt</div>
 </div>
 
 <div id="loadingScreen">
@@ -153,10 +117,20 @@ body { background: var(--bg); color: var(--text1);
 
 <div id="content" style="display:none">
 
-  <div class="success-banner">
+  <div class="banner" id="banner">
     <div class="icon" id="bannerIcon">✅</div>
     <h1 id="successTitle">Payment Successful</h1>
     <p id="successSub">Your service is being arranged now.</p>
+  </div>
+
+  <!-- Outstanding balance callout — only shown when there's a balance due -->
+  <div class="balance-callout" id="balanceCallout" style="display:none">
+    <div class="ico">💰</div>
+    <div class="txt">
+      <strong>Balance due</strong><br>
+      <span id="balanceMsg">Please complete payment to proceed.</span>
+    </div>
+    <div class="amt" id="balanceAmt">—</div>
   </div>
 
   <div class="ref-box">
@@ -169,23 +143,11 @@ body { background: var(--bg); color: var(--text1);
     <div id="orderInfo"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Progress</div>
-    <div class="tracker" id="tracker"></div>
-    <div class="refresh-note">
-      <span class="spin">⟳</span> Auto-refreshing every 15 seconds
-    </div>
-  </div>
-
-  <div class="card" id="servicesCard" style="display:none">
-    <div class="card-title">Service Status</div>
-    <div id="servicesList"></div>
-  </div>
-
-  <div class="share-box">
-    <div class="label">Save or share this tracking link to check status anytime:</div>
-    <div class="share-url" id="shareUrl"></div>
-    <button class="copy-btn" onclick="copyShareLink()">📋 Copy Link</button>
+  <!-- Payment history — appears whenever any payment row exists -->
+  <div class="card" id="paymentHistoryCard" style="display:none">
+    <div class="card-title">Payments</div>
+    <div id="paymentHistory"></div>
+    <div class="pay-summary" id="paymentSummary"></div>
   </div>
 
   <div style="text-align:center;color:var(--text3);font-size:13px;padding:20px 0">
@@ -202,8 +164,10 @@ body { background: var(--bg); color: var(--text1);
 <script>
 const API = location.origin + '/api';
 const params = new URLSearchParams(location.search);
-const orderId = params.get('order');
-const token   = params.get('token');
+// New short URL: ?t=<token>. Legacy: ?order=<id>&token=<token>.
+// Either is accepted — `token` is the only thing the server actually needs.
+const token   = params.get('t') || params.get('token');
+let orderId   = params.get('order') || '';   // may be missing in short form
 
 const loadingEl = document.getElementById('loadingScreen');
 const contentEl = document.getElementById('content');
@@ -262,8 +226,13 @@ function fmtShort(dt) {
   });
 }
 
+// Format an AED amount with 2 decimals
+function fmtAed(n) {
+  return 'AED ' + parseFloat(n || 0).toFixed(2);
+}
+
 async function loadOrder() {
-  if (!orderId || !token) {
+  if (!token) {
     showError('Invalid or missing tracking link.');
     return;
   }
@@ -275,18 +244,27 @@ async function loadOrder() {
       await fetch(`${API}/customer/verify-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // order_id may be empty when arriving via short URL — server
+        // resolves it from token alone.
         body: JSON.stringify({ order_id: orderId, token: token })
       });
     } catch (e) { /* non-fatal */ }
   }
 
   try {
-    const res = await fetch(`${API}/customer/booking/${orderId}?token=${encodeURIComponent(token)}`);
+    // Prefer the token-only endpoint when we don't have an order_id.
+    // Either path returns the same payload.
+    const url = orderId
+      ? `${API}/customer/booking/${orderId}?token=${encodeURIComponent(token)}`
+      : `${API}/customer/booking-by-token/${encodeURIComponent(token)}`;
+    const res = await fetch(url);
     const json = await res.json();
     if (!res.ok || !json?.data) {
       showError(json?.error || 'This tracking link is invalid or expired.');
       return;
     }
+    // Cache order_id from the response so any re-fetches use the fast path
+    orderId = json.data.id || orderId;
     render(json.data);
   } catch (e) {
     showError('Connection error — please try again.');
@@ -297,167 +275,133 @@ function render(order) {
   loadingEl.style.display = 'none';
   contentEl.style.display = 'block';
 
-  const isPaid = order.payment_status === 'paid';
-  const banner = document.querySelector('.success-banner');
+  const total   = parseFloat(order.total_amount || 0);
+  const paid    = parseFloat(order.paid_amount  || 0);
+  const balance = Math.max(0, total - paid);
 
-  if (!isPaid) {
-    banner.style.background = 'linear-gradient(135deg, var(--warning), #b45309)';
-    document.getElementById('bannerIcon').textContent = '⏳';
-    document.getElementById('successTitle').textContent = 'Awaiting Payment Confirmation';
-    document.getElementById('successSub').textContent = 'Refreshing automatically — this usually takes a few seconds.';
-  } else {
-    banner.style.background = 'linear-gradient(135deg, var(--success), #15803d)';
+  // Banner — three states now: paid / partial / unpaid
+  const banner = document.getElementById('banner');
+  banner.className = 'banner';
+  const status = order.payment_status;
+  if (status === 'paid') {
+    banner.classList.add('banner-paid');
     document.getElementById('bannerIcon').textContent = '✅';
     document.getElementById('successTitle').textContent = 'Payment Successful';
     document.getElementById('successSub').textContent = 'Your service is being arranged now.';
+  } else if (status === 'partial') {
+    banner.classList.add('banner-partial');
+    document.getElementById('bannerIcon').textContent = '◐';
+    document.getElementById('successTitle').textContent = 'Partial Payment Received';
+    document.getElementById('successSub').textContent =
+      `${fmtAed(paid)} received · ${fmtAed(balance)} still due. Service will start once payment is complete.`;
+  } else {
+    banner.classList.add('banner-unpaid');
+    document.getElementById('bannerIcon').textContent = '⏳';
+    document.getElementById('successTitle').textContent = 'Awaiting Payment';
+    document.getElementById('successSub').textContent = 'Refreshing automatically — please complete payment to proceed.';
   }
 
-  document.getElementById('orderRef').textContent = 'AP-' + order.id.slice(0, 6).toUpperCase();
+  // Outstanding balance callout — visible when any balance remains
+  const callout = document.getElementById('balanceCallout');
+  if (balance > 0.005) {
+    callout.style.display = 'flex';
+    document.getElementById('balanceAmt').textContent = fmtAed(balance);
+    document.getElementById('balanceMsg').textContent = status === 'partial'
+      ? 'Pay the remaining balance to your team leader on arrival, or via the link they share with you.'
+      : 'Complete payment to start the service. Your team leader will share a payment link with you.';
+  } else {
+    callout.style.display = 'none';
+  }
 
-  const isPorter = (order.vehicle_plate || '').toUpperCase() === 'PORTER';
+  // Order Reference — the real, canonical order_number from the database
+  // (e.g. "1034"). This is the same value the TL sees on their slip and
+  // admin sees in the Orders table. Customers quote it verbatim.
+  // Fallback to the legacy UUID-slice format only if order_number is
+  // missing — which shouldn't happen but keeps the page from breaking.
+  const refText = order.order_number
+    ? String(order.order_number)
+    : 'AP-' + order.id.slice(0, 6).toUpperCase();
+  document.getElementById('orderRef').textContent = refText;
+
+  // Order Details — derive the service name from the services array; the
+  // legacy "plate === PORTER" hack doesn't work now that plate is null for
+  // customer bookings. Pick the icon by the service name.
+  const firstSvc = Array.isArray(order.services) && order.services.length
+                 ? order.services[0] : null;
+  const svcName  = firstSvc?.service_name || 'Service';
+  const svcIcon  = /porter/i.test(svcName) ? '🧳' : '🚗';
+  // Order details — Vehicle + Customer rows removed; flow no longer
+  // collects them. The customer is on their own tracking page already
+  // (got here via their unique token), so name confirmation is moot.
   document.getElementById('orderInfo').innerHTML = `
-    <div class="info-row"><span class="lbl">Service</span><span class="val">${isPorter ? '🧳 Porter' : '🚗 Vehicle Service'}</span></div>
-    ${!isPorter ? `<div class="info-row"><span class="lbl">Vehicle</span><span class="val">${escapeHtml(order.vehicle_plate)}</span></div>` : ''}
-    ${order.customer_name ? `<div class="info-row"><span class="lbl">Customer</span><span class="val">${escapeHtml(order.customer_name)}</span></div>` : ''}
-    <div class="info-row"><span class="lbl">Total</span><span class="val">AED ${parseFloat(order.total_amount||0).toFixed(2)}</span></div>
-    <div class="info-row"><span class="lbl">Paid</span><span class="val" style="color:var(--success)">AED ${parseFloat(order.paid_amount||0).toFixed(2)}</span></div>
+    <div class="info-row"><span class="lbl">Service</span><span class="val">${svcIcon} ${escapeHtml(svcName)}</span></div>
+    <div class="info-row"><span class="lbl">Total</span><span class="val">${fmtAed(total)}</span></div>
+    <div class="info-row"><span class="lbl">Paid so far</span><span class="val val-paid">${fmtAed(paid)}</span></div>
+    ${balance > 0.005
+      ? `<div class="info-row"><span class="lbl">Balance due</span><span class="val val-due">${fmtAed(balance)}</span></div>`
+      : ''}
     <div class="info-row"><span class="lbl">Booked</span><span class="val" style="font-size:12px">${fmtShort(order.created_at)}</span></div>
   `;
 
-  renderTracker(order);
-  renderServiceList(order);
-
-  document.getElementById('shareUrl').textContent =
-    `${location.origin}/pay/success?order=${order.id}&token=${token}`;
+  renderPaymentHistory(order, total, paid, balance);
 }
 
-function renderTracker(order) {
-  const services = order.services || [];
-  const allCompleted  = services.length > 0 && services.every(s => s.status === 'completed');
-  const anyInProgress = services.some(s => s.status === 'in_progress');
-  const anyAccepted   = services.some(s => s.status === 'accepted');
-  const anyAssigned   = services.some(s => s.status === 'assigned');
+// Payment history — shows each successful payment row with method + amount + time.
+// Visible whenever there's at least one payment, useful for both partial and paid
+// orders so customers can see exactly what they've paid.
+function renderPaymentHistory(order, total, paid, balance) {
+  const payments = Array.isArray(order.payments) ? order.payments : [];
+  const card = document.getElementById('paymentHistoryCard');
 
-  // Derive timestamps from service rows
-  const firstAssignedAt = pickEarliest(services.map(s => s.assigned_at));
-  const firstStartedAt  = pickEarliest(services.map(s => s.started_at));
-  const lastCompletedAt = pickLatest(services.map(s => s.completed_at));
-
-  const steps = [
-    {
-      icon: '📝',
-      title: 'Booking Received',
-      sub: 'Your booking is in our system',
-      time: order.created_at,
-      state: 'done',
-    },
-    {
-      icon: '💳',
-      title: 'Payment Confirmed',
-      sub: order.payment_status === 'paid' ? 'Paid via card' : 'Awaiting confirmation…',
-      time: order.payment_status === 'paid' ? order.paid_at : null,
-      state: order.payment_status === 'paid' ? 'done' : 'active',
-    },
-    {
-      icon: '👤',
-      title: 'Provider Assigned',
-      sub: anyAssigned || anyAccepted || anyInProgress || allCompleted
-            ? 'A team member is on it'
-            : 'Looking for an available provider…',
-      time: firstAssignedAt,
-      state: anyAccepted || anyInProgress || allCompleted
-              ? 'done'
-              : (anyAssigned ? 'active' : 'pending'),
-    },
-    {
-      icon: '🔧',
-      title: 'Service In Progress',
-      sub: anyInProgress
-            ? 'Work has started on your vehicle'
-            : (allCompleted ? 'Work was completed' : 'Will start shortly'),
-      time: firstStartedAt,
-      state: allCompleted ? 'done' : (anyInProgress ? 'active' : 'pending'),
-    },
-    {
-      icon: '🎉',
-      title: 'Service Complete',
-      sub: allCompleted ? 'All done — thank you!' : 'You\'ll see this when finished',
-      time: lastCompletedAt,
-      state: allCompleted ? 'done' : 'pending',
-    },
-  ];
-
-  document.getElementById('tracker').innerHTML = steps.map(s => `
-    <div class="tracker-step ${s.state}">
-      <div class="dot">${s.state === 'done' ? '✓' : s.icon}</div>
-      <div class="text">
-        <div class="step-title">
-          <span>${s.title}</span>
-          ${s.time && (s.state === 'done' || s.state === 'active')
-            ? `<span class="step-time">${fmtTime(s.time)}</span>`
-            : ''}
-        </div>
-        <div class="step-sub">${escapeHtml(s.sub)}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderServiceList(order) {
-  const services = order.services || [];
-  // Only show this card when there are multiple services or extra detail is useful
-  if (services.length <= 1) {
-    document.getElementById('servicesCard').style.display = 'none';
+  if (!payments.length) {
+    card.style.display = 'none';
     return;
   }
-  document.getElementById('servicesCard').style.display = 'block';
+  card.style.display = 'block';
 
-  document.getElementById('servicesList').innerHTML = services.map(s => {
-    const statusLabel = {
-      pending:'Pending', assigned:'Assigned', accepted:'Accepted',
-      in_progress:'In Progress', completed:'Completed'
-    }[s.status] || s.status;
+  const methodIcon = { cash: '💵', card: '💳', online: '🔗' };
+  const methodLabel = { cash: 'Cash',       card: 'Card',       online: 'Online' };
 
-    let timeText = '';
-    if (s.completed_at) timeText = '✓ ' + fmtShort(s.completed_at);
-    else if (s.started_at) timeText = '▶ Started ' + fmtTime(s.started_at);
-    else if (s.assigned_at) timeText = '👤 Assigned ' + fmtTime(s.assigned_at);
-
+  document.getElementById('paymentHistory').innerHTML = payments.map(p => {
+    const m = p.payment_method;
+    const ref = p.transaction_ref ? `· Ref ${escapeHtml(p.transaction_ref)}` : '';
     return `
-      <div class="svc-row">
-        <span class="svc-name">${escapeHtml(s.service_name)}</span>
-        <span class="svc-status ${s.status}">${statusLabel}</span>
-        ${timeText ? `<span class="svc-time">${timeText}</span>` : ''}
+      <div class="payment-row">
+        <div class="pay-icon ${m}">${methodIcon[m] || '💰'}</div>
+        <div class="pay-info">
+          <div class="pay-method">${escapeHtml(methodLabel[m] || m)}</div>
+          <div class="pay-meta">${fmtTime(p.created_at)} ${ref}</div>
+        </div>
+        <div class="pay-amount">+${fmtAed(p.amount)}</div>
       </div>
     `;
   }).join('');
+
+  // Summary footer: total paid vs. balance remaining (if any).
+  // Two-row layout when there's a balance, single row when fully paid.
+  const summaryEl = document.getElementById('paymentSummary');
+  if (balance > 0.005) {
+    summaryEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;width:100%">
+        <span class="lbl">Total received</span>
+        <span class="val" style="color:var(--success)">${fmtAed(paid)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;width:100%;margin-top:4px">
+        <span class="lbl">Remaining due</span>
+        <span class="val" style="color:var(--partial)">${fmtAed(balance)}</span>
+      </div>
+    `;
+    summaryEl.style.flexDirection = 'column';
+  } else {
+    summaryEl.innerHTML = `
+      <span class="lbl">Total received</span>
+      <span class="val" style="color:var(--success)">${fmtAed(paid)}</span>
+    `;
+    summaryEl.style.flexDirection = 'row';
+  }
 }
 
-// Pick the earliest non-null timestamp from a list
-function pickEarliest(arr) {
-  const dates = arr.filter(Boolean).map(parseUtc).filter(Boolean);
-  if (!dates.length) return null;
-  return dates.reduce((a, b) => a < b ? a : b).toISOString();
-}
-
-// Pick the latest non-null timestamp from a list
-function pickLatest(arr) {
-  const dates = arr.filter(Boolean).map(parseUtc).filter(Boolean);
-  if (!dates.length) return null;
-  return dates.reduce((a, b) => a > b ? a : b).toISOString();
-}
-
-function copyShareLink() {
-  const url = document.getElementById('shareUrl').textContent;
-  navigator.clipboard.writeText(url).then(() => {
-    const btn = document.querySelector('.copy-btn');
-    btn.textContent = '✓ Copied!';
-    setTimeout(() => btn.textContent = '📋 Copy Link', 2000);
-  });
-}
-
-loadOrder();
-setInterval(loadOrder, 15000);
+loadOrder();  // single load — this is a receipt page, no polling needed
 </script>
 
 </body>

@@ -298,14 +298,45 @@ class AssignmentEngine
                  last_assigned_at  = UTC_TIMESTAMP()'
         )->execute([$providerId]);
 
-        // Send push notification to provider (best-effort)
+        // ── Pull context so the push body is actually informative ──
+        $ctx = $this->pdo->prepare(
+            'SELECT s.name                                            AS service_name,
+                    o.order_number,
+                    o.vehicle_plate,
+                    COALESCE(pl.code, os.location_details, "")        AS location_label
+             FROM order_services os
+             JOIN services s ON s.id = os.service_id
+             JOIN orders   o ON o.id = os.order_id
+             LEFT JOIN parking_locations pl ON pl.id = os.location_id
+             WHERE os.id = ?'
+        );
+        $ctx->execute([$serviceId]);
+        $row = $ctx->fetch() ?: [];
+
+        $serviceName = $row['service_name']   ?? 'service';
+        $plate       = $row['vehicle_plate']  ?? '';
+        $location    = $row['location_label'] ?? '';
+
+        $bodyParts = [];
+        if ($plate)    $bodyParts[] = "Vehicle: {$plate}";
+        if ($location) $bodyParts[] = "Location: {$location}";
+        $body = "New job: {$serviceName}"
+              . ($bodyParts ? ' — ' . implode(' · ', $bodyParts) : '')
+              . '. Tap to accept.';
+
+        // Push notification (best-effort — never blocks the assignment)
         try {
             $notifier = new NotificationService($this->pdo);
             $notifier->notify($providerId, 'new_assignment', [
-                'title'      => 'New job assigned',
-                'body'       => 'You have a new service job. Tap to accept.',
-                'service_id' => $serviceId,
-                'order_id'   => $svc['order_id'],
+                'title'         => "New job: {$serviceName}",
+                'body'          => $body,
+                'service_id'    => $serviceId,
+                'order_id'      => $svc['order_id'],
+                'order_number'  => $row['order_number'] ?? null,
+                'service_name'  => $serviceName,
+                'vehicle_plate' => $plate,
+                'location'      => $location,
+                'url'           => "/provider/index.html#job/{$serviceId}",
             ]);
         } catch (\Throwable $e) {
             error_log('Notify failed (assignment): ' . $e->getMessage());

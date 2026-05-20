@@ -9,13 +9,34 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
+# Force trailing slash on frontend portal URLs
+# (needed so service worker scopes match — /provider != /provider/)
+RewriteRule ^admin$        /admin/        [R=308,L]
+RewriteRule ^agent$        /agent/        [R=308,L]
+RewriteRule ^provider$     /provider/     [R=308,L]
+RewriteRule ^team-leader$  /team-leader/  [R=308,L]
+RewriteRule ^customer$     /customer/     [R=308,L]
+RewriteRule ^pay$          /pay/          [R=308,L]
+RewriteRule ^book$         /book/         [R=308,L]
+
+# Customer-facing alias: /customer/* is internally served from frontend/pay/*
+# One physical folder, two public URLs. Keeps the customer link in
+# QR codes / marketing materials stable while the dev path stays /pay.
+# Must come BEFORE the generic frontend rewrites below.
+RewriteRule ^customer/?(.*)$ frontend/pay/$1 [L]
+
+# Short payment redirect: /pay/go/<token> goes to backend/index.php.
+# The router has a matching public route registered under this exact
+# path. Must come BEFORE the generic /pay/* and /api/* rules.
+RewriteRule ^pay/go/([^/]+)/?$  backend/index.php  [L,QSA]
+
 # Route frontend shortcuts
-RewriteRule ^admin/?(.*)$    frontend/admin/$1    [L]
-RewriteRule ^agent/?(.*)$    frontend/agent/$1    [L]
-RewriteRule ^provider/?(.*)$ frontend/provider/$1 [L]
-RewriteRule ^customer/?(.*)$ frontend/customer/$1 [L]
-RewriteRule ^pay/?(.*)$      frontend/pay/$1      [L]
-RewriteRule ^book/?(.*)$     frontend/book/$1     [L]
+RewriteRule ^admin/?(.*)$       frontend/admin/$1        [L]
+RewriteRule ^agent/?(.*)$       frontend/agent/$1        [L]
+RewriteRule ^provider/?(.*)$    frontend/provider/$1     [L]
+RewriteRule ^team-leader/?(.*)$ frontend/team-leader/$1  [L]
+RewriteRule ^pay/?(.*)$         frontend/pay/$1          [L]
+RewriteRule ^book/?(.*)$        frontend/book/$1         [L]
 
 # Route API to backend
 RewriteRule ^api/(.*)$       backend/index.php    [L,QSA]
@@ -25,7 +46,6 @@ RewriteRule ^api/(.*)$       backend/index.php    [L,QSA]
   Header set Service-Worker-Allowed "/"
   Header set Cache-Control "no-cache, no-store, must-revalidate"
 </Files>
-
 <Files "manifest.json">
   Header set Content-Type "application/manifest+json"
   Header set Cache-Control "public, max-age=300"

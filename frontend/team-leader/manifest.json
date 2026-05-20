@@ -1,0 +1,20 @@
+{
+  "name": "AirVAS Team Leader",
+  "short_name": "TL · AirVAS",
+  "description": "Team Leader portal for Airport VAS (UAE airports).",
+  "id": "/team-leader/",
+  "start_url": "/team-leader/",
+  "scope": "/team-leader/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf7f1",
+  "theme_color": "#0f3a3e",
+  "lang": "en",
+  "icons": [
+    { "src": "/iconspwa/tl-192.png",           "sizes": "192x192", "type": "image/png", "purpose": "any"      },
+    { "src": "/iconspwa/tl-512.png",           "sizes": "512x512", "type": "image/png", "purpose": "any"      },
+    { "src": "/iconspwa/tl-maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false
+}

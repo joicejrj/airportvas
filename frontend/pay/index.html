@@ -3,211 +3,825 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pay — AirVAS</title>
+<title>Book a Service — AirVAS</title>
 <style>
-  :root {
-    --bg: #f0f6ff; --card: #ffffff; --accent: #0ea5e9; --accent2: #0284c7;
-    --success: #16a34a; --danger: #dc2626; --warning: #d97706;
-    --text1: #0f172a; --text2: #475569; --text3: #94a3b8; --border: #e2e8f0;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text1);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .card { background: var(--card); border-radius: 20px; padding: 28px 24px;
-    max-width: 420px; width: 100%; box-shadow: 0 12px 48px rgba(15,23,42,0.10); }
-  .brand { text-align: center; margin-bottom: 24px; }
-  .brand .logo { font-size: 22px; font-weight: 800; color: var(--accent); }
-  .brand .sub { font-size: 11px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+:root {
+  --bg: #f0f6ff; --card: #fff; --accent: #0ea5e9; --accent2: #0284c7;
+  --accent-soft: #e0f2fe;
+  --success: #16a34a; --danger: #dc2626; --warning: #d97706;
+  --partial: #f59e0b;
+  --text1: #0f172a; --text2: #475569; --text3: #94a3b8; --border: #e2e8f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100dvh; max-width: 520px; margin: 0 auto; padding: 20px; }
 
-  .order-info { background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  .order-info .row { display: flex; justify-content: space-between; padding: 6px 0; align-items:center; }
-  .order-info .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
-  .order-info .value { font-size: 14px; color: var(--text1); font-weight: 600; text-align: right; }
+button { font-family: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .5; }
 
-  .amount-box { text-align: center; padding: 24px 20px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-    border-radius: 12px; margin: 16px 0; border: 1px solid #bae6fd; }
-  .amount-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
-  .amount-value { font-size: 40px; font-weight: 800; color: var(--accent); margin-top: 4px; line-height: 1; }
+.brand { text-align: center; padding: 20px 0 30px; }
+.brand .logo { font-size: 22px; font-weight: 800; color: var(--accent); }
+.brand .sub { font-size: 11px; color: var(--text3); letter-spacing: 1.5px;
+  text-transform: uppercase; margin-top: 4px; }
 
-  .pay-btn { width: 100%; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: #fff;
-    border: none; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700;
-    cursor: pointer; transition: opacity .2s; font-family: inherit; }
-  .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .pay-btn:active:not(:disabled) { transform: scale(0.98); }
+/* ────────────── Step header (progress + title) ────────────── */
+.step-head { margin-bottom: 24px; }
+.step-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  list-style: none;
+}
+.step-progress li {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background .2s;
+}
+.step-progress li.done { background: var(--success); }
+.step-progress li.active { background: var(--accent); }
+.step-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text1);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.step-sub {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.5;
+}
 
-  .secure-row { display: flex; align-items: center; gap: 6px; justify-content: center;
-    font-size: 11px; color: var(--text3); margin-top: 14px; }
-  .secure-row .lock { font-size: 14px; }
+/* ────────────── Service picker ────────────── */
+.svc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+@media (max-width: 380px) { .svc-grid { grid-template-columns: 1fr; } }
+.svc-tile {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 14px;
+  text-align: center;
+  transition: border-color .15s, transform .1s, box-shadow .15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.svc-tile:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px rgba(14,165,233,0.08);
+}
+.svc-tile:active { transform: scale(.97); }
+.svc-tile-icon {
+  font-size: 38px;
+  width: 64px; height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft);
+  border-radius: 50%;
+}
+.svc-tile-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text1);
+}
+.svc-tile-price {
+  font-size: 13px;
+  color: var(--text2);
+  font-variant-numeric: tabular-nums;
+}
 
-  .status { text-align: center; padding: 40px 20px; }
-  .status .icon { font-size: 64px; margin-bottom: 16px; }
-  .status .title { font-size: 22px; font-weight: 800; }
-  .status.success .title { color: var(--success); }
-  .status.error   .title { color: var(--danger); }
-  .status .sub { font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 1.5; }
-  .small { font-size: 12px; color: var(--text3); text-align: center; margin-top: 14px; line-height: 1.5; }
+/* ────────────── Yes / No big buttons ────────────── */
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.choice-btn {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text1);
+  transition: all .15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.choice-btn:hover { border-color: var(--accent); }
+.choice-btn:active { transform: scale(.97); }
+.choice-btn .ico { font-size: 32px; }
+.choice-btn-yes { border-color: var(--success); color: var(--success); }
+.choice-btn-yes:hover { background: rgba(22,163,74,0.05); }
+.choice-btn-no  { border-color: var(--warning); color: var(--warning); }
+.choice-btn-no:hover  { background: rgba(217,119,6,0.05); }
 
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase; }
-  .badge.unpaid { background: #fee2e2; color: #991b1b; }
-  .badge.paid   { background: #dcfce7; color: #166534; }
+/* ────────────── Dead-end ("find an employee first") ────────────── */
+.dead-end-card {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border: 1px solid #fdba74;
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+}
+.dead-end-card .ico {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+.dead-end-card .title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #9a3412;
+  margin-bottom: 10px;
+}
+.dead-end-card .body {
+  font-size: 14px;
+  color: #7c2d12;
+  line-height: 1.6;
+}
 
-  .err { color: var(--danger); font-size: 13px; text-align: center; margin-top: 12px; min-height: 18px; }
-  .skeleton { background: #e2e8f0; border-radius: 4px; height: 14px; margin: 6px 0;
-    animation: shimmer 1.2s linear infinite; background-image: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
-    background-size: 200% 100%; }
-  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+/* ────────────── Employee search ────────────── */
+.emp-search-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text1);
+  transition: border-color .15s, box-shadow .15s;
+  margin-bottom: 12px;
+}
+.emp-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
+}
+.emp-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.emp-result {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  text-align: left;
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.emp-result:hover { border-color: var(--accent); }
+.emp-result:active { transform: scale(.99); }
+.emp-result.selected {
+  border-color: var(--success);
+  background: rgba(22,163,74,0.04);
+}
+.emp-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+}
+.emp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.emp-avatar svg { width: 60%; height: 60%; }
+.emp-info-name { font-size: 15px; font-weight: 700; color: var(--text1); }
+.emp-info-code {
+  font-size: 12px;
+  color: var(--text2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin-top: 1px;
+}
+.emp-empty {
+  text-align: center;
+  padding: 28px 12px;
+  color: var(--text3);
+  font-size: 14px;
+}
+
+/* ────────────── Selected employee confirm card ────────────── */
+.emp-confirm-card {
+  background: var(--card);
+  border: 1.5px solid var(--success);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.emp-confirm-card .emp-avatar {
+  width: 64px; height: 64px;
+}
+.emp-confirm-card-text { flex: 1; }
+.emp-confirm-card-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--success);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.emp-confirm-card-name { font-size: 17px; font-weight: 800; color: var(--text1); }
+.emp-confirm-card-code {
+  font-size: 12px;
+  color: var(--text2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin-top: 2px;
+}
+
+/* ────────────── Checkout summary ────────────── */
+.co-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.co-card.co-summary { border-left: 4px solid var(--accent); }
+.co-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 14px;
+}
+.co-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 8px 0;
+  font-size: 14px;
+  gap: 12px;
+}
+.co-row-lbl { color: var(--text2); }
+.co-row-val { color: var(--text1); font-weight: 600; text-align: right; }
+.co-divider { height: 1px; background: var(--border); margin: 6px 0; }
+.co-total .co-row-lbl {
+  color: var(--text1);
+  font-weight: 700;
+  font-size: 15px;
+}
+.co-total .co-row-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+/* ────────────── Footer (Continue/Back buttons) ────────────── */
+.step-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.btn {
+  padding: 14px 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all .15s;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  flex: 2;
+}
+.btn-primary:hover { background: var(--accent2); }
+.btn-primary:active { transform: scale(.98); }
+.btn-secondary {
+  background: var(--card);
+  color: var(--text2);
+  border: 1.5px solid var(--border);
+  flex: 1;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ────────────── Loading + error ────────────── */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+}
+.spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  font-size: 28px;
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.banner-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--danger);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
 </style>
 </head>
 <body>
 
-<div class="card" id="card">
-  <div class="brand">
-    <div class="logo">✈ AirVAS</div>
-    <div class="sub">Secure Payment</div>
-  </div>
+<div class="brand">
+  <div class="logo">✈ AirVAS</div>
+  <div class="sub">Airport Services</div>
+</div>
 
-  <div id="loading">
-    <div class="skeleton" style="width:60%;margin:8px auto"></div>
-    <div class="skeleton" style="width:80%;margin:8px auto"></div>
-    <div class="skeleton" style="width:50%;margin:8px auto;height:32px"></div>
+<div id="root">
+  <div class="loading">
+    <div class="spinner">⟳</div>
+    <div style="margin-top:10px">Loading…</div>
   </div>
-
-  <div id="content" style="display:none"></div>
 </div>
 
 <script>
+// ──────────────────────────────────────────────────────────────────
+// Customer booking flow
+//
+//   Step 1: pick a service
+//   Step 2: "Are you with an employee?" (Yes / No)
+//            ↳ No  → dead-end message (must find an employee first)
+//            ↳ Yes → Step 3
+//   Step 3: search + select employee (by code or name)
+//   Step 4: checkout (Order Summary card → pay → Stripe)
+// ──────────────────────────────────────────────────────────────────
 const API = location.origin + '/api';
-const params = new URLSearchParams(location.search);
-const orderId = params.get('order');
+const root = document.getElementById('root');
 
-const loadingEl = document.getElementById('loading');
-const contentEl = document.getElementById('content');
+// Service icon mapping — keeps the page from depending on the service.icon
+// field (which may store anything). Falls back to a generic glyph.
+const SERVICE_ICON = {
+  'car-wash':       '🚗',
+  'porter':         '🧳',
+  'porter-service': '🧳',
+};
+
+// Persistent flow state across re-renders
+const state = {
+  step:          1,
+  service:       null,    // { id, name, base_price, icon }
+  withEmployee:  null,    // null | true | false
+  empQuery:      '',
+  empResults:    [],
+  empLoading:    false,
+  empSelected:   null,    // { id, employee_code, name, image_path }
+  searchTimer:   null,
+  error:         null,
+};
 
 function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(s ?? '').replace(/[&<>"']/g,
+    (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtAed(n) {
+  return 'AED ' + parseFloat(n || 0).toFixed(2);
 }
 
-function showError(title, sub) {
-  loadingEl.style.display = 'none';
-  contentEl.style.display = 'block';
-  contentEl.innerHTML = `
-    <div class="status error">
-      <div class="icon">⚠️</div>
-      <div class="title">${escapeHtml(title)}</div>
-      <div class="sub">${escapeHtml(sub || '')}</div>
-    </div>`;
+// Generic <progress> renderer for the step header
+function progressBar() {
+  // 4 visible steps: service / Y-N / pick employee / checkout
+  // (the No-branch dead-end uses the same bar with step 2 active)
+  const steps = ['svc', 'with', 'emp', 'pay'];
+  const idx   = state.step - 1;
+  return `
+    <ul class="step-progress">
+      ${steps.map((_, i) => `
+        <li class="${i < idx ? 'done' : i === idx ? 'active' : ''}"></li>
+      `).join('')}
+    </ul>`;
 }
 
-async function loadOrder() {
-  if (!orderId) {
-    showError('Invalid Link', 'This payment link is missing the order reference.');
+function silhouetteSvg() {
+  return `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="20" cy="15" r="6" fill="currentColor" opacity=".55"/>
+    <path d="M8 36c1-7 6-11 12-11s11 4 12 11z" fill="currentColor" opacity=".55"/>
+  </svg>`;
+}
+
+function resolveImg(path) {
+  if (!path) return '';
+  if (/^https?:\/\//.test(path)) return path;
+  return location.origin + (path.startsWith('/') ? path : '/' + path);
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Step 1 — service picker
+// ──────────────────────────────────────────────────────────────────
+async function renderStep1() {
+  root.innerHTML = `
+    <div class="step-head">
+      ${progressBar()}
+      <h1 class="step-title">Choose a service</h1>
+      <p class="step-sub">Tap the service you need — we'll connect you with an employee on the ground.</p>
+    </div>
+    <div id="svc-area" class="loading">
+      <div class="spinner">⟳</div>
+      <div style="margin-top:10px">Loading services…</div>
+    </div>
+  `;
+
+  let services = [];
+  try {
+    const res = await fetch(`${API}/customer/services`);
+    const json = await res.json();
+    services = json?.data?.items || [];
+  } catch (e) {
+    root.querySelector('#svc-area').innerHTML =
+      `<div class="banner-error">Couldn't load services — check your connection and refresh.</div>`;
     return;
   }
 
-  try {
-    const res = await fetch(`${API}/customer/order-preview/${encodeURIComponent(orderId)}`);
-    const json = await res.json();
-    if (!res.ok || !json?.data) {
-      showError('Order Not Found', json?.error || json?.message || 'This order does not exist.');
-      return;
-    }
-    renderOrder(json.data);
-  } catch (e) {
-    showError('Connection Error', 'Please check your internet and try again.');
+  if (!services.length) {
+    root.querySelector('#svc-area').innerHTML =
+      `<div class="banner-error">No services are currently available. Please try again later.</div>`;
+    return;
   }
+
+  root.querySelector('#svc-area').outerHTML = `
+    <div class="svc-grid">
+      ${services.map((s) => `
+        <button class="svc-tile" data-svc="${escapeHtml(s.id)}">
+          <span class="svc-tile-icon">${SERVICE_ICON[s.icon] || '🛎'}</span>
+          <span class="svc-tile-name">${escapeHtml(s.name)}</span>
+          <span class="svc-tile-price">${fmtAed(s.base_price)}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  root.querySelectorAll('[data-svc]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const picked = services.find((s) => s.id === btn.dataset.svc) || null;
+      // If the customer picked a different service than last time, wipe
+      // every downstream decision — the employee they may have chosen
+      // before doesn't belong to this service, the Y/N answer was for the
+      // previous service, etc. Identical re-pick keeps existing state so
+      // a "back, didn't change my mind, forward" flow doesn't reset.
+      if (!state.service || !picked || picked.id !== state.service.id) {
+        state.withEmployee = null;
+        state.empQuery     = '';
+        state.empResults   = [];
+        state.empSelected  = null;
+        state.empLoading   = false;
+        state.error        = null;
+        clearTimeout(state.searchTimer);
+      }
+      state.service = picked;
+      state.step = 2;
+      renderStep2();
+    });
+  });
 }
 
-function renderOrder(order) {
-  loadingEl.style.display = 'none';
-  contentEl.style.display = 'block';
+// ──────────────────────────────────────────────────────────────────
+// Step 2 — "Are you with an employee?"
+// ──────────────────────────────────────────────────────────────────
+function renderStep2() {
+  root.innerHTML = `
+    <div class="step-head">
+      ${progressBar()}
+      <h1 class="step-title">Are you with an employee?</h1>
+      <p class="step-sub">Tap <b>Yes</b> if a team member is already with you. Tap <b>No</b> if you're booking on your own.</p>
+    </div>
+    <div class="choice-grid">
+      <button class="choice-btn choice-btn-yes" id="ans-yes">
+        <span class="ico">✓</span>
+        <span>Yes</span>
+      </button>
+      <button class="choice-btn choice-btn-no" id="ans-no">
+        <span class="ico">✗</span>
+        <span>No</span>
+      </button>
+    </div>
+    <div class="step-footer" style="margin-top:24px">
+      <button class="btn btn-secondary" id="back">← Back</button>
+    </div>
+  `;
 
-  if (order.payment_status === 'paid') {
-    contentEl.innerHTML = `
-      <div class="status success">
-        <div class="icon">✅</div>
-        <div class="title">Already Paid</div>
-        <div class="sub">This order has been paid. Thank you!</div>
-        <div class="small">Order ID: ${escapeHtml(order.id.slice(0, 8))}…</div>
+  root.querySelector('#ans-yes').addEventListener('click', () => {
+    // If the customer is flipping their answer (No → Yes, or coming back
+    // and changing), any prior employee selection is stale.
+    if (state.withEmployee !== true) {
+      state.empQuery    = '';
+      state.empResults  = [];
+      state.empSelected = null;
+      state.empLoading  = false;
+      clearTimeout(state.searchTimer);
+    }
+    state.withEmployee = true;
+    state.step = 3;
+    renderStep3();
+  });
+  root.querySelector('#ans-no').addEventListener('click', () => {
+    // Tapping No discards any employee they may have picked previously.
+    state.empQuery    = '';
+    state.empResults  = [];
+    state.empSelected = null;
+    state.empLoading  = false;
+    clearTimeout(state.searchTimer);
+    state.withEmployee = false;
+    renderDeadEnd();
+  });
+  root.querySelector('#back').addEventListener('click', () => {
+    state.step = 1;
+    renderStep1();
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// "No" branch — dead-end message
+// ──────────────────────────────────────────────────────────────────
+function renderDeadEnd() {
+  root.innerHTML = `
+    <div class="step-head">
+      ${progressBar()}
+      <h1 class="step-title">Please find an employee first</h1>
+    </div>
+    <div class="dead-end-card">
+      <div class="ico">👋</div>
+      <div class="title">No employee yet?</div>
+      <div class="body">
+        Our service requires you to be with one of our team members at the airport.
+        Please look for an AirVAS employee in the terminal — they'll help you start your service.
+      </div>
+    </div>
+    <div class="step-footer" style="margin-top:20px">
+      <button class="btn btn-secondary" id="back">← Back</button>
+    </div>
+  `;
+  root.querySelector('#back').addEventListener('click', () => {
+    state.step = 2;
+    renderStep2();
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────
+// Step 3 — employee search + selection
+// ──────────────────────────────────────────────────────────────────
+function renderStep3() {
+  root.innerHTML = `
+    <div class="step-head">
+      ${progressBar()}
+      <h1 class="step-title">Which employee are you with?</h1>
+      <p class="step-sub">Type their <b>employee code</b> or <b>name</b>, then tap them in the list.</p>
+    </div>
+    <input id="emp-q" class="emp-search-input"
+           type="text"
+           placeholder="e.g. CW001 or Mohammed"
+           autocomplete="off"
+           autocapitalize="words"
+           value="${escapeHtml(state.empQuery)}">
+    <div id="emp-results" class="emp-results"></div>
+    <div class="step-footer">
+      <button class="btn btn-secondary" id="back">← Back</button>
+      <button class="btn btn-primary" id="continue" disabled>Continue →</button>
+    </div>
+  `;
+
+  const inp = root.querySelector('#emp-q');
+  const cont = root.querySelector('#continue');
+
+  // Paint whatever was selected before (if user navigated back to this step)
+  paintEmpResults();
+  if (state.empSelected) {
+    cont.disabled = false;
+    inp.value = state.empSelected.name;
+  }
+  // Focus & put caret at end
+  inp.focus();
+  inp.setSelectionRange(inp.value.length, inp.value.length);
+
+  inp.addEventListener('input', (e) => {
+    // Capitalize first letter of each word as the customer types. Mobile
+    // keyboards' autocapitalize handles the first letter; this catches
+    // subsequent words too (e.g. "mohammed iqbal" → "Mohammed Iqbal").
+    // Codes like "CW001" survive because capitalising "Cw001" gives "Cw001"
+    // and the SQL LIKE is case-insensitive on the default utf8mb4 collation.
+    const raw = e.target.value;
+    const titled = raw.replace(/\b([a-z])/g, (m) => m.toUpperCase());
+    if (titled !== raw) {
+      // Preserve caret position across the in-place update
+      const pos = inp.selectionStart;
+      inp.value = titled;
+      inp.setSelectionRange(pos, pos);
+    }
+    state.empQuery = inp.value;
+    state.empSelected = null;       // clear selection if user starts typing again
+    cont.disabled = true;
+    clearTimeout(state.searchTimer);
+    state.searchTimer = setTimeout(searchEmployees, 250);
+  });
+
+  root.querySelector('#back').addEventListener('click', () => {
+    state.step = 2;
+    renderStep2();
+  });
+  cont.addEventListener('click', () => {
+    if (!state.empSelected) return;
+    state.step = 4;
+    renderStep4();
+  });
+}
+
+async function searchEmployees() {
+  const q = state.empQuery.trim();
+  if (q.length < 2) {
+    state.empResults = [];
+    paintEmpResults();
+    return;
+  }
+  state.empLoading = true;
+  paintEmpResults();
+  try {
+    const res = await fetch(
+      `${API}/customer/employees/search?service_id=${encodeURIComponent(state.service.id)}&q=${encodeURIComponent(q)}`
+    );
+    const json = await res.json();
+    state.empResults = json?.data?.items || [];
+  } catch (e) {
+    state.empResults = [];
+  }
+  state.empLoading = false;
+  paintEmpResults();
+}
+
+function paintEmpResults() {
+  const host = root.querySelector('#emp-results');
+  if (!host) return;
+
+  if (state.empLoading) {
+    host.innerHTML = `<div class="emp-empty"><span class="spinner">⟳</span> Searching…</div>`;
+    return;
+  }
+  if (!state.empQuery || state.empQuery.length < 2) {
+    host.innerHTML = `<div class="emp-empty">Start typing to search…</div>`;
+    return;
+  }
+  if (!state.empResults.length) {
+    host.innerHTML = `
+      <div class="emp-empty">
+        No employee found.<br>
+        Double-check the code or ask them for their <b>employee code</b>.
       </div>`;
     return;
   }
 
-  const isPorter = (order.vehicle_plate || '').toUpperCase() === 'PORTER';
-  const amount   = parseFloat(order.total_amount || 0).toFixed(2);
-  const services = (order.services || []).join(', ') || (isPorter ? 'Porter Service' : 'Service');
-
-  contentEl.innerHTML = `
-    <div class="order-info">
-      <div class="row">
-        <span class="label">Service</span>
-        <span class="value">${isPorter ? '🧳 ' : '🚗 '}${escapeHtml(services)}</span>
-      </div>
-      ${!isPorter ? `
-        <div class="row">
-          <span class="label">Vehicle</span>
-          <span class="value">${escapeHtml(order.vehicle_plate || '—')}</span>
-        </div>` : ''}
-      ${order.customer_name ? `
-        <div class="row">
-          <span class="label">Customer</span>
-          <span class="value">${escapeHtml(order.customer_name)}</span>
-        </div>` : ''}
-      <div class="row">
-        <span class="label">Status</span>
-        <span class="value"><span class="badge unpaid">Unpaid</span></span>
-      </div>
-    </div>
-
-    <div class="amount-box">
-      <div class="amount-label">Amount Due</div>
-      <div class="amount-value">AED ${amount}</div>
-    </div>
-
-    <button class="pay-btn" id="payBtn" onclick="startPayment()">
-      Pay AED ${amount}
+  host.innerHTML = state.empResults.map((e) => `
+    <button class="emp-result ${state.empSelected?.id === e.id ? 'selected' : ''}"
+            data-emp="${escapeHtml(e.id)}">
+      <span class="emp-avatar">
+        ${e.image_path
+          ? `<img src="${escapeHtml(resolveImg(e.image_path))}" alt="">`
+          : silhouetteSvg()}
+      </span>
+      <span>
+        <span class="emp-info-name">${escapeHtml(e.name)}</span>
+        <span class="emp-info-code">${escapeHtml(e.employee_code)}</span>
+      </span>
     </button>
-    <div class="err" id="err"></div>
-    <div class="secure-row">
-      <span class="lock">🔒</span> Secured by Stripe. Cards processed safely.
-    </div>
-  `;
+  `).join('');
+
+  host.querySelectorAll('[data-emp]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.empSelected = state.empResults.find((x) => x.id === btn.dataset.emp) || null;
+      // Replace input value with the selected name so it's clear what's picked
+      const inp = root.querySelector('#emp-q');
+      if (inp && state.empSelected) {
+        inp.value = state.empSelected.name;
+        state.empQuery = state.empSelected.name;
+      }
+      paintEmpResults();
+      root.querySelector('#continue').disabled = !state.empSelected;
+    });
+  });
 }
 
-async function startPayment() {
-  const btn = document.getElementById('payBtn');
-  const errEl = document.getElementById('err');
-  errEl.textContent = '';
-  btn.disabled = true;
-  btn.textContent = 'Redirecting to Stripe…';
+// ──────────────────────────────────────────────────────────────────
+// Step 4 — checkout (Order Summary + Pay button → Stripe)
+// ──────────────────────────────────────────────────────────────────
+function renderStep4() {
+  const svc = state.service;
+  const emp = state.empSelected;
+
+  root.innerHTML = `
+    <div class="step-head">
+      ${progressBar()}
+      <h1 class="step-title">Confirm and pay</h1>
+      <p class="step-sub">Review the details, then proceed to secure payment.</p>
+    </div>
+
+    ${state.error ? `<div class="banner-error">${escapeHtml(state.error)}</div>` : ''}
+
+    <!-- Selected-employee card -->
+    <div class="emp-confirm-card">
+      <span class="emp-avatar">
+        ${emp.image_path
+          ? `<img src="${escapeHtml(resolveImg(emp.image_path))}" alt="">`
+          : silhouetteSvg()}
+      </span>
+      <div class="emp-confirm-card-text">
+        <div class="emp-confirm-card-eyebrow">Your employee</div>
+        <div class="emp-confirm-card-name">${escapeHtml(emp.name)}</div>
+        <div class="emp-confirm-card-code">${escapeHtml(emp.employee_code)}</div>
+      </div>
+    </div>
+
+    <!-- Order summary card -->
+    <div class="co-card co-summary">
+      <div class="co-card-title">Order summary</div>
+      <div class="co-row">
+        <span class="co-row-lbl">Service</span>
+        <span class="co-row-val">${escapeHtml(svc.name)}</span>
+      </div>
+      <div class="co-row">
+        <span class="co-row-lbl">Employee</span>
+        <span class="co-row-val">${escapeHtml(emp.employee_code)} · ${escapeHtml(emp.name)}</span>
+      </div>
+      <div class="co-divider"></div>
+      <div class="co-row co-total">
+        <span class="co-row-lbl">Total</span>
+        <span class="co-row-val">${fmtAed(svc.base_price)}</span>
+      </div>
+    </div>
+
+    <div class="step-footer">
+      <button class="btn btn-secondary" id="back">← Back</button>
+      <button class="btn btn-primary" id="pay">Pay ${fmtAed(svc.base_price)} →</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);text-align:center;padding:14px 0">
+      Secure payment via Stripe. You'll receive a tracking link after payment.
+    </div>
+  `;
+
+  root.querySelector('#back').addEventListener('click', () => {
+    state.step = 3;
+    state.error = null;
+    renderStep3();
+  });
+  root.querySelector('#pay').addEventListener('click', placeOrder);
+}
+
+async function placeOrder() {
+  const payBtn = root.querySelector('#pay');
+  payBtn.disabled = true;
+  payBtn.textContent = 'Creating order…';
 
   try {
-    const res = await fetch(`${API}/customer/pay-existing`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: orderId })
+    // POST /api/customer/booking returns { checkout_url } baked in —
+    // the server creates the Stripe Checkout Session as part of the booking.
+    // No extra round-trip is needed.
+    const bookingRes = await fetch(`${API}/customer/booking`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body:    JSON.stringify({
+        service_id:  state.service.id,
+        employee_id: state.empSelected.id,
+        source:      'customer_web',
+      }),
     });
-    const json = await res.json();
-
-    if (!res.ok || !json?.checkout_url) {
-      errEl.textContent = json?.error || json?.message || 'Could not start payment';
-      btn.disabled = false;
-      btn.textContent = 'Try Again';
-      return;
+    const bookingJson = await bookingRes.json();
+    if (!bookingRes.ok) {
+      throw new Error(bookingJson?.error || bookingJson?.message || 'Could not create order');
     }
 
-    // Redirect to Stripe Checkout
-    window.location.href = json.checkout_url;
+    // checkout_url is at the top level of the response (booking() mirrors it).
+    const url = bookingJson?.checkout_url
+             || bookingJson?.data?.checkout_url;
+    if (!url) {
+      throw new Error('Payment is temporarily unavailable. Please contact the employee for help.');
+    }
+
+    payBtn.textContent = 'Redirecting to payment…';
+    location.href = url;
   } catch (e) {
-    errEl.textContent = 'Connection error. Please try again.';
-    btn.disabled = false;
-    btn.textContent = 'Try Again';
+    state.error = e.message || 'Something went wrong — please try again.';
+    payBtn.disabled = false;
+    payBtn.textContent = 'Pay ' + fmtAed(state.service.base_price) + ' →';
+    renderStep4();   // re-render to show the banner
   }
 }
 
-loadOrder();
+// Kick off
+renderStep1();
 </script>
-
 </body>
 </html>

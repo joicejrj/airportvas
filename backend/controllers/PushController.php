@@ -8,15 +8,27 @@ namespace App\Controllers;
 use App\Config\Database;
 use App\Core\{Response, Request};
 use App\Middleware\AuthMiddleware;
+use App\Helpers\NotificationService;
 
 /**
  * Web Push Subscription Management
  *
- * POST   /api/push/subscribe     – save / refresh a push subscription
- * DELETE /api/push/subscribe     – remove subscription (device logout)
+ * GET    /api/push/public-key   – return VAPID public key (public, no auth)
+ * POST   /api/push/subscribe    – save / refresh a push subscription
+ * DELETE /api/push/subscribe    – remove subscription (device logout)
+ * POST   /api/push/test         – send a test push to the caller
  */
 class PushController
 {
+    // GET /api/push/public-key — no auth needed; public key is public.
+    public function publicKey(): void
+    {
+        if (empty(VAPID_PUBLIC_KEY)) {
+            Response::error('Push not configured', 503);
+        }
+        Response::success(['publicKey' => VAPID_PUBLIC_KEY]);
+    }
+
     // POST /api/push/subscribe
     public function subscribe(): void
     {
@@ -24,7 +36,6 @@ class PushController
         $req  = new Request();
         $pdo  = Database::getInstance();
 
-        // The browser PushSubscription JSON: {endpoint, keys: {p256dh, auth}}
         $endpoint = $req->input('endpoint');
         $p256dh   = $req->input('p256dh');
         $auth     = $req->input('auth');
@@ -33,7 +44,6 @@ class PushController
             Response::error('endpoint, p256dh, and auth are required', 422);
         }
 
-        // Upsert: update keys if endpoint already registered for this user
         $pdo->prepare(
             'INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth, created_at, updated_at)
              VALUES (?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
@@ -60,11 +70,30 @@ class PushController
                 'DELETE FROM push_subscriptions WHERE user_id = ? AND endpoint = ?'
             )->execute([$user['id'], $endpoint]);
         } else {
-            // Remove ALL subscriptions for this user (full logout)
             $pdo->prepare('DELETE FROM push_subscriptions WHERE user_id = ?')
                 ->execute([$user['id']]);
         }
 
         Response::success(null, 'Unsubscribed');
+    }
+
+    // POST /api/push/test — useful for testing the pipe end-to-end
+    public function test(): void
+    {
+        $user = AuthMiddleware::require(['admin', 'agent', 'provider']);
+        try {
+            (new NotificationService())->notify(
+                $user['id'],
+                'test',
+                [
+                    'title' => '🔔 Test notification',
+                    'body'  => 'Push notifications are working!',
+                    'url'   => '/' . $user['role'] . '/index.html',
+                ]
+            );
+            Response::success(null, 'Test sent');
+        } catch (\Throwable $e) {
+            Response::error('Test failed: ' . $e->getMessage(), 500);
+        }
     }
 }
